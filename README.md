@@ -22,7 +22,7 @@ Each burp issue includes detailed info about reflected parameter, such as:
 ![reflector usage](https://github.com/elkokc/reflector/blob/master/screenshot/symbols_analyse.png)
 When the reflection is found and option "Agreesive mode" is activated, the reflector will check which of special-symbols are displayed on this page from vulnerable parameters. For this action, reflector compose additional requests for each reflected parameter. In example, while we was working with elkokc.ml website reflector are generated issue with a detailed information about reflection. There are 3 reflection for "search" parameter and each of them pass special symbols. Because of the possibility of displaying special characters issue severity is marked as high. Every time when reflection is found reflector define severity and generate burp issue.
 
-# Context analyze
+# Context analyse
 In the "Check context" mode  reflector it's not only show special characters that are reflected to the page, but also figure out a character that alows to break the syntax in the page code. In example you may see server response by reflector extension. Parameter "search" was send with a payload  - p@y<"'p@y. As a result, it was reflected a few times in a different contexts. 
 * reflection with next characters - ',", <  and the double quote  allow to exit from this context and write HTML code.
 * reflection with next characters - ", <  and the bracket allow to inject HTML-tags. 
