@@ -1,6 +1,7 @@
 package burp;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -14,6 +15,7 @@ import static burp.MapConstants.*;
 
 public class CheckReflection {
 
+    public static final int QUOTE_BYTE = 34;
     private final int bodyOffset;
 
     private IExtensionHelpers helpers;
@@ -32,10 +34,17 @@ public class CheckReflection {
     public List<Map> checkResponse() {
         List<Map> reflectedParameters = new ArrayList<>();
         List<IParameter> parameters = helpers.analyzeRequest(iHttpRequestResponse).getParameters();
+        byte[] request = iHttpRequestResponse.getRequest();
         for (IParameter parameter : parameters){
+            // 34 byte значит строка
+
             byte[] bytesOfParamValue = helpers.urlDecode(parameter.getValue().getBytes());
             if (bytesOfParamValue.length > 2)
             {
+                byte b = request[parameter.getValueStart() - 1];
+                if(parameter.getType() == IParameter.PARAM_JSON && b != QUOTE_BYTE){
+                    continue;
+                }
                 List<int[]> listOfMatches = getMatches(iHttpRequestResponse.getResponse(), bytesOfParamValue);
                 if (!listOfMatches.isEmpty())
                 {
@@ -121,13 +130,20 @@ class MapConstants
     public static final String MATCHES = "Matches";
     public static final String REFLECTED_IN = "ReflectedIn";
     public static final String VULNERABLE = "Vulnerable";
-    public static final String CONTEXT_CHAR = "Context char: ";
+    public static final String CONTEXT_VULN_FLAG = " :VULNERABLE";
     public static final String SCOPE_ONLY = "Scope only";
     public static final String CHECK_CONTEXT = "Check context";
     public static final String AGRESSIVE_MODE = "Agressive mode";
     public static final String HEADERS = "HEADERS";
     public static final String BODY = "BODY";
     public static final String BOTH = "ALL";
+    public static final String CONTEXT_OUT_OF_TAG = "Html";
+    public static final String CONTEXT_IN_ATTRIBUTE_Q = "Attribute (')";
+    public static final String CONTEXT_IN_ATTRIBUTE_DQ = "Attribute (\")";
+    public static final String CONTEXT_IN_TAG = "In tag";
+    public static final String CONTEXT_IN_SCRIPT_TAG_STRING_Q = "Script str (')";
+    public static final String CONTEXT_IN_SCRIPT_TAG_STRING_DQ = "Script str (\")";
+    public static final String CONTEXT_IN_SCRIPT_TAG = "Script";
 }
 
 class Aggressive
@@ -140,6 +156,7 @@ class Aggressive
     private int port;
     private static final String PAYLOAD_GREP = "p@y";
     private static final String PAYLOAD = "<\"'";
+    private static final String PAYLOAD_JSON = "<\\\"'";
     private Pattern pattern;
     private Settings settings;
 
@@ -150,9 +167,8 @@ class Aggressive
         this.baseRequestResponse = baseRequestResponse;
         this.host = helpers.analyzeRequest(baseRequestResponse).getUrl().getHost();
         this.port = helpers.analyzeRequest(baseRequestResponse).getUrl().getPort();
-        this.pattern = Pattern.compile(PAYLOAD_GREP + "(.{1,15}?)" + PAYLOAD_GREP);
+        this.pattern = Pattern.compile(PAYLOAD_GREP + "([_%&;\"'<#\\\\0-9a-z]{1,15}?)" + PAYLOAD_GREP);
         this.settings = settings;
-
     }
 
     public List<Map> scanReflectedParameters(){
@@ -163,6 +179,7 @@ class Aggressive
             if(param.get(REFLECTED_IN) == HEADERS) {
                 continue;
             }
+
             testRequest = prepareRequest(param);
             symbols = checkRespone(testRequest);
             if (!symbols.equals(""))
@@ -175,42 +192,69 @@ class Aggressive
 
     private String checkRespone(String testRequest) {
         String tmp = "",
-                symbols = "",
-                tmpContext = "";
+                symbols = "";
+        boolean vulnerableFlag = false;
+        ContextAnalyzer contextAnalyzer;
+        int bodyOffset;
         try {
             String response = new Client(callbacks).run(testRequest, host, this.port);
             Matcher matcher = this.pattern.matcher(response);
+            bodyOffset = response.indexOf("\n\n") + 2;
+            if ( settings.getCheckContext() && bodyOffset != 1) {
+                contextAnalyzer = new ContextAnalyzer( response.substring(bodyOffset).toLowerCase() );
+            } else {
+                contextAnalyzer = null;
+            }
             while (matcher.find())
             {
-                tmp = matcher.group(1).replaceAll("[^<\"']", "");
+                tmp = matcher.group(1).replaceAll("[^<\"'\\\\]", "").replaceAll("(\\\\\"|\\\\')", "");
                 if (tmp.length() > 0)
                 {
-                    if (settings.getCheckContext())
+                    if (contextAnalyzer != null)
                     {
-                        String reflectedPayload = PAYLOAD_GREP + matcher.group(1) + PAYLOAD_GREP;
-                        Pattern contextBracketPattern = Pattern.compile(">[^<]*" + Pattern.quote(reflectedPayload) + "[^>]*<");
-                        Pattern contextScriptOpenPattern = Pattern.compile("<[^<]*script[^<]*>[^<]*" + Pattern.quote(reflectedPayload));
-                        tmpContext = getContext(response, matcher);
-
-                        String contextChar = null;
-
-                        Matcher matcherScript = contextScriptOpenPattern.matcher(tmpContext);
-                        if ( matcherScript.find() )
-                        {
-                            contextChar = checkQuotes(tmpContext, reflectedPayload);
-                        } else {
-                            Matcher matcherBracket = contextBracketPattern.matcher(tmpContext);
-                            if ( matcherBracket.find() ) {
-                                if ( tmp.contains("<") )
-                                    contextChar = "<";
-                            } else {
-                                contextChar = checkQuotes(tmpContext, reflectedPayload);
-                            }
+                        String context = contextAnalyzer.getContext(matcher.start() - bodyOffset);
+                        String contextChars = null;
+                        switch (context) {
+                            case CONTEXT_OUT_OF_TAG: {
+                                if (tmp.contains("<")) {
+                                    contextChars = "<";
+                                }
+                            } break;
+                            case CONTEXT_IN_ATTRIBUTE_Q: {
+                                if (tmp.contains("'"))
+                                    contextChars = "'";
+                            } break;
+                            case CONTEXT_IN_ATTRIBUTE_DQ: {
+                                if (tmp.contains("\""))
+                                    contextChars = "\"";
+                            } break;
+                            case CONTEXT_IN_TAG: {
+                                if (tmp.length() > 0)
+                                    contextChars = tmp;
+                                else
+                                    contextChars = "ALL";
+                            } break;
+                            case CONTEXT_IN_SCRIPT_TAG_STRING_Q: {
+                                if (tmp.contains("'"))
+                                    contextChars = "'";
+                            } break;
+                            case CONTEXT_IN_SCRIPT_TAG_STRING_DQ: {
+                                if (tmp.contains("\""))
+                                    contextChars = "\"";
+                            } break;
+                            case CONTEXT_IN_SCRIPT_TAG: {
+                                if (tmp.length() > 0)
+                                    contextChars = tmp;
+                                else
+                                    contextChars = "ALL";
+                            } break;
                         }
-
-                        if ( contextChar != null ) {
-                            symbols += CONTEXT_CHAR + contextChar + ", other chars: ";
-                            tmp = tmp.replace(contextChar, "");
+                        if ( contextChars != null ) {
+                            vulnerableFlag = true;
+                            symbols += String.valueOf(context) + ": " + contextChars;
+                            tmp = tmp.replace(contextChars, "");
+                            if (tmp.length() > 0)
+                                symbols +=  ", other chars: ";
                         }
                     }
 
@@ -223,8 +267,11 @@ class Aggressive
                 }
             }
 
-            if (!symbols.equals(""))
+            if (!symbols.equals("")) {
                 symbols = symbols.substring(0, symbols.length() - 4).replaceAll("<", "&lt;").replaceAll("'", "&#39;").replaceAll("\"", "&quot;").replaceAll("\\|\\|", "<b>|</b>");
+                if (vulnerableFlag)
+                    symbols += CONTEXT_VULN_FLAG;
+            }
         } catch (IOException e) {
             callbacks.printError(e.getMessage());
             return "";
@@ -240,20 +287,14 @@ class Aggressive
         return symbols;
     }
 
-    private String checkQuotes(String tmpContext, String reflectedPayload) {
-        String qoutesContext = tmpContext.substring(tmpContext.indexOf(reflectedPayload) + reflectedPayload.length());
-        int quoteIndex = reflectedPayload.contains("'") ? qoutesContext.indexOf("'"): -1;
-        int doubleQuoteIndex = reflectedPayload.contains("\"") ? qoutesContext.indexOf("\""): -1;
-        if ( quoteIndex != -1 && ( quoteIndex < doubleQuoteIndex || doubleQuoteIndex == -1) )
-            return "'";
-        if ( doubleQuoteIndex != -1 && ( doubleQuoteIndex < quoteIndex || quoteIndex == -1) )
-            return "\"";
-        return null;
-    }
-
     private String prepareRequest(Map parameter) {
+        String payload = PAYLOAD;
+        if(parameter.get(TYPE) ==  IParameter.PARAM_JSON ){
+            payload = PAYLOAD_JSON;
+        }
+
         String tmpRequest = helpers.bytesToString(baseRequestResponse.getRequest()).substring(0, (int)parameter.get("ValueStart")) + PAYLOAD_GREP
-                + PAYLOAD + PAYLOAD_GREP + helpers.bytesToString(baseRequestResponse.getRequest()).substring((int)parameter.get("ValueEnd"));
+                + payload + PAYLOAD_GREP + helpers.bytesToString(baseRequestResponse.getRequest()).substring((int)parameter.get("ValueEnd"));
         String contentLength = "";
         for (String header : helpers.analyzeRequest(baseRequestResponse).getHeaders())
         {
@@ -266,19 +307,12 @@ class Aggressive
             return  tmpRequest;
         }
         int paramLength = (int)parameter.get(VALUE_END) - (int)parameter.get(VALUE_START);
-        int lengthDiff = (PAYLOAD_GREP + PAYLOAD + PAYLOAD_GREP).length() - paramLength;
+        int lengthDiff = (PAYLOAD_GREP + payload + PAYLOAD_GREP).length() - paramLength;
         String contentLengthString = contentLength.split(": ")[1].trim();
         int contentLengthInt = Integer.parseInt(contentLengthString) + lengthDiff;
         int contentLengthIntOffsetStart = tmpRequest.toLowerCase().indexOf("content-length");
         tmpRequest = tmpRequest.substring(0, contentLengthIntOffsetStart + 16) + String.valueOf(contentLengthInt) +
                 tmpRequest.substring(contentLengthIntOffsetStart + 16 + contentLengthString.length());
         return tmpRequest;
-    }
-
-    private String getContext(String response, Matcher matcher) {
-        int beginIndex = response.substring(0, matcher.start()).lastIndexOf(PAYLOAD_GREP);
-        int endIndex = response.substring(matcher.end()).indexOf(PAYLOAD_GREP);
-        return response.substring(beginIndex==-1 ? 0 : beginIndex + PAYLOAD_GREP.length(),
-                endIndex==-1 ? response.length()-1: endIndex + matcher.end());
     }
 }
