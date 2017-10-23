@@ -33,7 +33,7 @@ In the "Check context" mode  reflector it's not only show special characters tha
 In the issue information it's marked as: 
 * Context char - character that allows to breake the syntax.
 * Other chars - other chars that are reflected without context.
-![reflector usage](https://github.com/elkokc/reflector/blob/master/screenshot/aggressivemode_context1.png)
+![reflector usage](https://github.com/elkokc/reflector/blob/master/screenshot/aggressivemode_context_burp.png)
 
 # Reflection navigation
 Navigation by arrow buttons in the response tab.
