@@ -138,11 +138,11 @@ class MapConstants
     public static final String BODY = "BODY";
     public static final String BOTH = "ALL";
     public static final String CONTEXT_OUT_OF_TAG = "Html";
-    public static final String CONTEXT_IN_ATTRIBUTE_Q = "Attribute (')";
-    public static final String CONTEXT_IN_ATTRIBUTE_DQ = "Attribute (\")";
+    public static final String CONTEXT_IN_ATTRIBUTE_Q = "Attribute'";
+    public static final String CONTEXT_IN_ATTRIBUTE_DQ = "Attribute\"";
     public static final String CONTEXT_IN_TAG = "In tag";
-    public static final String CONTEXT_IN_SCRIPT_TAG_STRING_Q = "Script str (')";
-    public static final String CONTEXT_IN_SCRIPT_TAG_STRING_DQ = "Script str (\")";
+    public static final String CONTEXT_IN_SCRIPT_TAG_STRING_Q = "Script str'";
+    public static final String CONTEXT_IN_SCRIPT_TAG_STRING_DQ = "Script str\"";
     public static final String CONTEXT_IN_SCRIPT_TAG = "Script";
 }
 
@@ -208,7 +208,7 @@ class Aggressive
             while (matcher.find())
             {
                 tmp = matcher.group(1).replaceAll("[^<\"'\\\\]", "").replaceAll("(\\\\\"|\\\\')", "");
-                if (tmp.length() > 0)
+                if (tmp.length() > 0 && matcher.start() >= bodyOffset)
                 {
                     if (contextAnalyzer != null)
                     {
@@ -221,12 +221,16 @@ class Aggressive
                                 }
                             } break;
                             case CONTEXT_IN_ATTRIBUTE_Q: {
-                                if (tmp.contains("'"))
+                                if (tmp.contains("'")) {
+                                    context = context.substring( 0, context.length() - 1 );
                                     contextChars = "'";
+                                }
                             } break;
                             case CONTEXT_IN_ATTRIBUTE_DQ: {
-                                if (tmp.contains("\""))
+                                if (tmp.contains("\"")) {
+                                    context = context.substring(0, context.length() - 1);
                                     contextChars = "\"";
+                                }
                             } break;
                             case CONTEXT_IN_TAG: {
                                 if (tmp.length() > 0)
@@ -235,12 +239,16 @@ class Aggressive
                                     contextChars = "ALL";
                             } break;
                             case CONTEXT_IN_SCRIPT_TAG_STRING_Q: {
-                                if (tmp.contains("'"))
+                                if (tmp.contains("'")) {
+                                    context = context.substring(0, context.length() - 1);
                                     contextChars = "'";
+                                }
                             } break;
                             case CONTEXT_IN_SCRIPT_TAG_STRING_DQ: {
-                                if (tmp.contains("\""))
+                                if (tmp.contains("\"")) {
+                                    context = context.substring(0, context.length() - 1);
                                     contextChars = "\"";
+                                }
                             } break;
                             case CONTEXT_IN_SCRIPT_TAG: {
                                 if (tmp.length() > 0)
