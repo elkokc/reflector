@@ -47,6 +47,15 @@ Navigation by arrow buttons in the response tab.
 Moreover you can manage content-types whitelist with which  reflector plugin should work. But if you will use another types except text/html,  this can lead to slowdowns in work.
 ![reflector usage](https://github.com/elkokc/reflector/blob/master/screenshot/settings.png)
 
+# How to compile
+Compiled by jdk 1.7
+
+Example:
+
+* javac.exe -d build src/burp/*.java
+
+* jar.exe cf plugin.jar -C build burp
+
 # Authors
 * Shvetsov Alexandr (GitHub: ![shvetsovalex](https://github.com/shvetsovalex))
 * Dimitrenko Egor (GitHub: ![elkokc](https://github.com/elkokc))
