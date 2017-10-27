@@ -18,7 +18,7 @@ Each burp issue includes detailed info about reflected parameter, such as:
 * Highlighting of reflection value in response.
 * Reflection context analyze.
 
-# Allowed sybmols analyse
+# Allowed symbols analyse
 ![reflector usage](https://github.com/elkokc/reflector/blob/master/screenshot/symbols_analyse.png)
 When the reflection is found and option "Aggressive mode" is activated, the reflector will check which of special-symbols are displayed on this page from vulnerable parameters. For this action, reflector compose additional requests for each reflected parameter. In example, while we was working with elkokc.ml website reflector are generated issue with a detailed information about reflection. There are 3 reflection for "search" parameter and each of them pass special symbols. Because of the possibility of displaying special characters issue severity is marked as high. Every time when reflection is found reflector define severity and generate burp issue.
 
