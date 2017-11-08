@@ -111,7 +111,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
                 JPanel option2 = optionPanel2.getPanel();
                 aggressiveMode = optionPanel2.getCheckBox();
                 aggressiveMode.setSelected(settings.getAggressiveMode());
-                option2.setBounds(58, 63, 130, 20);
+                option2.setBounds(58, 63, 135, 20);
                 panel.add(option2);
                 BurpExtender.OptionPanel optionPanel3 = placeOption(CHECK_CONTEXT);
                 JPanel option3 = optionPanel3.getPanel();
