@@ -28,7 +28,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
     public static final String ADD = "Add";
     private JPanel panel;
     private final String OPTIONS_NAME = "Scanner options";
-    private final String AGRESSIVE_MODE = "Agressive mode";
+    private final String AGGRESSIVE_MODE = "Aggressive mode";
     private final String SCOPE_ONLY = "Scope only";
     private final String CHECK_CONTEXT = "Check context";
     private JButton addButton;
@@ -37,15 +37,11 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
     private JTable table;
     private TableModel model;
     private JCheckBox scopeOnly;
-    private JCheckBox agressiveMode;
+    private JCheckBox aggressiveMode;
     private JCheckBox checkContext;
     private Settings settings;
 
     private CheckReflection checkReflection;
-
-    //
-    // implement IBurpExtender
-    //
 
     @Override
     public void registerExtenderCallbacks(final IBurpExtenderCallbacks callbacks)
@@ -111,10 +107,10 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
                 scopeOnly.setSelected(settings.getScopeOnly());
                 option1.setBounds(58, 43, 130, 20);
                 panel.add(option1);
-                BurpExtender.OptionPanel optionPanel2 = placeOption(AGRESSIVE_MODE);
+                BurpExtender.OptionPanel optionPanel2 = placeOption(AGGRESSIVE_MODE);
                 JPanel option2 = optionPanel2.getPanel();
-                agressiveMode = optionPanel2.getCheckBox();
-                agressiveMode.setSelected(settings.getAgressiveMode());
+                aggressiveMode = optionPanel2.getCheckBox();
+                aggressiveMode.setSelected(settings.getAggressiveMode());
                 option2.setBounds(58, 63, 130, 20);
                 panel.add(option2);
                 BurpExtender.OptionPanel optionPanel3 = placeOption(CHECK_CONTEXT);
@@ -183,10 +179,10 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
         });
 
         //checkbox option
-        agressiveMode.addItemListener(new ItemListener() {
+        aggressiveMode.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                settings.setAgressiveMode(agressiveMode.isSelected());
+                settings.setAggressiveMode(aggressiveMode.isSelected());
             }
         });
 

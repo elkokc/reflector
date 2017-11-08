@@ -7,7 +7,7 @@ import static burp.MapConstants.*;
 class Settings
 {
     private String scopeOnly;
-    private String agressiveMode;
+    private String aggressiveMode;
     private String checkContext;
     private IBurpExtenderCallbacks callbacks;
     private ArrayList<Object[]> contentTypes;
@@ -23,11 +23,11 @@ class Settings
         this.callbacks = callbacks;
         scopeOnly = callbacks.loadExtensionSetting(SCOPE_ONLY);
         checkContext = callbacks.loadExtensionSetting(CHECK_CONTEXT);
-        agressiveMode = callbacks.loadExtensionSetting(AGRESSIVE_MODE);
+        aggressiveMode = callbacks.loadExtensionSetting(AGGRESSIVE_MODE);
         if(scopeOnly == null)
             scopeOnly = FALSE_CONST;
-        if(agressiveMode == null)
-            agressiveMode = TRUE_CONST;
+        if(aggressiveMode == null)
+            aggressiveMode = TRUE_CONST;
         if(checkContext == null)
             checkContext = FALSE_CONST;
 
@@ -59,8 +59,8 @@ class Settings
         return extractedArray;
     }
 
-    public Boolean getAgressiveMode() {
-        return Boolean.valueOf(agressiveMode);
+    public Boolean getAggressiveMode() {
+        return Boolean.valueOf(aggressiveMode);
     }
 
     public Boolean getCheckContext() {
@@ -72,9 +72,9 @@ class Settings
         callbacks.saveExtensionSetting(SCOPE_ONLY ,this.scopeOnly);
     }
 
-    public void setAgressiveMode(boolean agressiveMode) {
-        this.agressiveMode = String.valueOf(agressiveMode);
-        callbacks.saveExtensionSetting(AGRESSIVE_MODE ,this.agressiveMode);
+    public void setAggressiveMode(boolean aggressiveMode) {
+        this.aggressiveMode = String.valueOf(aggressiveMode);
+        callbacks.saveExtensionSetting(AGGRESSIVE_MODE,this.aggressiveMode);
     }
 
     public void setCheckContext(boolean checkContext) {

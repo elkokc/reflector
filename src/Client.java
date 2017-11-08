@@ -1,32 +1,24 @@
 package burp;
 
-import javax.net.SocketFactory;
 import javax.net.ssl.*;
 import java.io.*;
-import java.lang.reflect.Array;
-import java.math.BigInteger;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
-import java.security.*;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.*;
 import java.util.zip.GZIPInputStream;
-
-import java.nio.ByteBuffer;
 
 public class Client {
 
+    private static final int TIMEOUT = 2000;
     private IBurpExtenderCallbacks callbacks;
 
     public Client(IBurpExtenderCallbacks callbacks) { this.callbacks = callbacks; }
     public String run(String request, String url, int port) throws IOException, KeyManagementException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
         Socket socket = getSocket(url, port);
-        socket.setSoTimeout(2000);
+        socket.setSoTimeout(TIMEOUT);
         BufferedWriter out = new BufferedWriter(
                 new OutputStreamWriter(socket.getOutputStream(), "UTF8"));
         InputStream in = socket.getInputStream();
@@ -89,15 +81,15 @@ public class Client {
 
     private String parseChunkedResponse(String rawBody)
     {
-        String[] chunks = rawBody.split("0D0A");
-        String resultBody = "";
-        for (int i = 0; i < chunks.length; i ++ )
-        {
-            try {
-                Long.parseLong((new String(javax.xml.bind.DatatypeConverter.parseHexBinary(chunks[i]))), 16);
-            } catch(Exception ex) {
-                resultBody += chunks[i];
-            }
+        String resultBody = "",
+            tmpBody = rawBody;
+        String[] chunks = tmpBody.split("0D0A", 2);
+        int chunkLen = Integer.parseInt((new String(javax.xml.bind.DatatypeConverter.parseHexBinary(chunks[0]))), 16);
+        while (chunkLen != 0) {
+            resultBody += chunks[1].substring( 0, chunkLen * 2 );
+            tmpBody = chunks[1].substring(chunkLen * 2 + 4);
+            chunks = tmpBody.split("0D0A", 2);
+            chunkLen = Integer.parseInt((new String(javax.xml.bind.DatatypeConverter.parseHexBinary(chunks[0]))), 16);
         }
         return resultBody;
     }
