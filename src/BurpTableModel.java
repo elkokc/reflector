@@ -15,12 +15,12 @@ public class BurpTableModel extends AbstractTableModel {
 
     rowData = settings.getContentTypes();
     addTableModelListener(
-        new TableModelListener() {
+    new TableModelListener() {
 
-          public void tableChanged(TableModelEvent e) {
-            settings.saveContentTypes();
-          }
-        });
+      public void tableChanged(TableModelEvent e) {
+        settings.saveContentTypes();
+      }
+    });
   }
 
   public void removeRow(int row) {

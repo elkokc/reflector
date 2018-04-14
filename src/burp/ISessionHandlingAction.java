@@ -46,6 +46,6 @@ public interface ISessionHandlingAction
      * session handling tokens, etc.
      */
     void performAction(
-            IHttpRequestResponse currentRequest,
-            IHttpRequestResponse[] macroItems);
+        IHttpRequestResponse currentRequest,
+        IHttpRequestResponse[] macroItems);
 }

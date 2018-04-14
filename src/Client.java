@@ -20,12 +20,13 @@ public class Client {
   }
 
   public String run(String request, String url, int port)
-      throws IOException, KeyManagementException, KeyStoreException, CertificateException,
-          NoSuchAlgorithmException {
+  throws IOException, KeyManagementException, KeyStoreException,
+           CertificateException,
+    NoSuchAlgorithmException {
     Socket socket = getSocket(url, port);
     socket.setSoTimeout(TIMEOUT);
     BufferedWriter out =
-        new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF8"));
+      new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF8"));
     InputStream in = socket.getInputStream();
     sendMessage(out, request);
     String response = readResponse(in);
@@ -35,7 +36,8 @@ public class Client {
     return response;
   }
 
-  private void sendMessage(BufferedWriter out, String request) throws IOException {
+  private void sendMessage(BufferedWriter out,
+                           String request) throws IOException {
     out.write(request);
     out.write("\r\n");
     out.flush();
@@ -46,22 +48,29 @@ public class Client {
     int bodyOffset = -1;
     byte[] by = new byte[1];
     int nRead;
+
     while ((nRead = in.read(by, 0, by.length)) != -1) {
       stringResponse += javax.xml.bind.DatatypeConverter.printHexBinary(by);
     }
+
     bodyOffset = stringResponse.indexOf("0D0A0D0A");
+
     if (bodyOffset != -1) {
       rawBody = stringResponse.substring(bodyOffset + 8, stringResponse.length());
     }
+
     rawHeaders =
-        new String(
-            javax.xml.bind.DatatypeConverter.parseHexBinary(
-                stringResponse.substring(0, bodyOffset)));
+      new String(
+      javax.xml.bind.DatatypeConverter.parseHexBinary(
+        stringResponse.substring(0, bodyOffset)));
+
     if (rawHeaders.contains("Transfer-Encoding: chunked")) {
       rawBody = parseChunkedResponse(rawBody);
     }
+
     try {
       byte[] bytesBody = javax.xml.bind.DatatypeConverter.parseHexBinary(rawBody);
+
       if (rawBody.length() > 1 && isCompressed(bytesBody)) {
         String outStr = "";
         ByteArrayInputStream inByteArray = new ByteArrayInputStream(bytesBody);
@@ -69,14 +78,16 @@ public class Client {
         InputStreamReader reader = new InputStreamReader(gzis);
         BufferedReader pr = new BufferedReader(reader);
         String readed;
+
         while ((readed = pr.readLine()) != null) {
           outStr += readed;
         }
+
         return rawHeaders + "\n\n" + outStr;
       } else {
         return rawHeaders
-            + "\n\n"
-            + new String(javax.xml.bind.DatatypeConverter.parseHexBinary(rawBody));
+               + "\n\n"
+               + new String(javax.xml.bind.DatatypeConverter.parseHexBinary(rawBody));
       }
     } catch (Exception ex) {
       callbacks.printOutput(ex.getMessage());
@@ -88,36 +99,41 @@ public class Client {
     String resultBody = "", tmpBody = rawBody;
     String[] chunks = tmpBody.split("0D0A", 2);
     int chunkLen =
-        Integer.parseInt(
-            (new String(javax.xml.bind.DatatypeConverter.parseHexBinary(chunks[0]))), 16);
+      Integer.parseInt(
+        (new String(javax.xml.bind.DatatypeConverter.parseHexBinary(chunks[0]))), 16);
+
     while (chunkLen != 0) {
       resultBody += chunks[1].substring(0, chunkLen * 2);
       tmpBody = chunks[1].substring(chunkLen * 2 + 4);
       chunks = tmpBody.split("0D0A", 2);
       chunkLen =
-          Integer.parseInt(
-              (new String(javax.xml.bind.DatatypeConverter.parseHexBinary(chunks[0]))), 16);
+        Integer.parseInt(
+          (new String(javax.xml.bind.DatatypeConverter.parseHexBinary(chunks[0]))), 16);
     }
+
     return resultBody;
   }
 
   private static Socket getSocket(String url, int port)
-      throws IOException, NoSuchAlgorithmException, KeyManagementException {
-    if (port != 443) return new Socket(url, port);
+  throws IOException, NoSuchAlgorithmException, KeyManagementException {
+    if (port != 443) {
+      return new Socket(url, port);
+    }
+
     TrustManager[] trustAllCerts =
-        new TrustManager[] {
-          new X509TrustManager() {
-            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-              return null;
-            }
+      new TrustManager[] {
+    new X509TrustManager() {
+      public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+        return null;
+      }
 
-            @Override
-            public void checkClientTrusted(X509Certificate[] certs, String authType) {}
+      @Override
+      public void checkClientTrusted(X509Certificate[] certs, String authType) {}
 
-            @Override
-            public void checkServerTrusted(X509Certificate[] certs, String authType) {}
-          }
-        };
+      @Override
+      public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+    }
+    };
     SSLContext sc = SSLContext.getInstance("SSL");
     sc.init(null, trustAllCerts, new java.security.SecureRandom());
     SSLSocketFactory sslsocketfactory = sc.getSocketFactory();
@@ -125,8 +141,8 @@ public class Client {
   }
 
   private static boolean isCompressed(final byte[] compressed) {
-    return (compressed[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
-        && (compressed[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
+    return (compressed[0] == (byte)(GZIPInputStream.GZIP_MAGIC))
+           && (compressed[1] == (byte)(GZIPInputStream.GZIP_MAGIC >> 8));
   }
 }
 

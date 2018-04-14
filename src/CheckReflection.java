@@ -25,30 +25,37 @@ public class CheckReflection {
   IBurpExtenderCallbacks callbacks;
 
   public CheckReflection(
-      Settings settings,
-      IExtensionHelpers helpers,
-      IHttpRequestResponse iHttpRequestResponse,
-      IBurpExtenderCallbacks callbacks) {
+    Settings settings,
+    IExtensionHelpers helpers,
+    IHttpRequestResponse iHttpRequestResponse,
+    IBurpExtenderCallbacks callbacks) {
     this.settings = settings;
     this.helpers = helpers;
     this.callbacks = callbacks;
     this.iHttpRequestResponse = iHttpRequestResponse;
-    this.bodyOffset = helpers.analyzeResponse(iHttpRequestResponse.getResponse()).getBodyOffset();
+    this.bodyOffset = helpers.analyzeResponse(
+                        iHttpRequestResponse.getResponse()).getBodyOffset();
   }
 
   public List<Map> checkResponse() {
     List<Map> reflectedParameters = new ArrayList<>();
-    List<IParameter> parameters = helpers.analyzeRequest(iHttpRequestResponse).getParameters();
+    List<IParameter> parameters = helpers.analyzeRequest(
+                                    iHttpRequestResponse).getParameters();
     byte[] request = iHttpRequestResponse.getRequest();
+
     for (IParameter parameter : parameters) {
       byte[] bytesOfParamValue = helpers.urlDecode(parameter.getValue().getBytes());
+
       if (bytesOfParamValue.length > 2) {
         byte b = request[parameter.getValueStart() - 1];
+
         if (parameter.getType() == IParameter.PARAM_JSON && b != QUOTE_BYTE) {
           continue;
         }
+
         List<int[]> listOfMatches =
-            getMatches(iHttpRequestResponse.getResponse(), bytesOfParamValue);
+          getMatches(iHttpRequestResponse.getResponse(), bytesOfParamValue);
+
         if (!listOfMatches.isEmpty()) {
           Map parameterDescription = new HashMap();
           parameterDescription.put(NAME, parameter.getName());
@@ -57,48 +64,63 @@ public class CheckReflection {
           parameterDescription.put(VALUE_START, parameter.getValueStart());
           parameterDescription.put(VALUE_END, parameter.getValueEnd());
           parameterDescription.put(MATCHES, listOfMatches);
-          parameterDescription.put(REFLECTED_IN, checkWhereReflectionPlaced(listOfMatches));
+          parameterDescription.put(REFLECTED_IN,
+                                   checkWhereReflectionPlaced(listOfMatches));
           reflectedParameters.add(parameterDescription);
         }
       }
     }
+
     if (settings.getAggressiveMode() && !reflectedParameters.isEmpty()) {
       Aggressive scan =
-          new Aggressive(settings, helpers, iHttpRequestResponse, callbacks, reflectedParameters);
+        new Aggressive(settings, helpers, iHttpRequestResponse, callbacks,
+                       reflectedParameters);
       scan.scanReflectedParameters();
     } else if (settings.getCheckContext() && !reflectedParameters.isEmpty()) {
       String symbols = "",
-          body = new String(iHttpRequestResponse.getResponse()).substring(this.bodyOffset);
+             body = new String(iHttpRequestResponse.getResponse()).substring(
+        this.bodyOffset);
       ArrayList<int[]> payloadIndexes = null;
+
       // cycle by parameters
       for (Map parameter : reflectedParameters) {
         payloadIndexes = new ArrayList<>();
 
         for (int[] indexPair : (ArrayList<int[]>) parameter.get(MATCHES)) {
           int[] tmpIndexes =
-              new int[] {indexPair[0] - this.bodyOffset, indexPair[1] - this.bodyOffset};
+            new int[] {indexPair[0] - this.bodyOffset, indexPair[1] - this.bodyOffset};
           payloadIndexes.add(tmpIndexes);
         }
 
-        ContextAnalyzer contextAnalyzer = new ContextAnalyzer(body.toLowerCase(), payloadIndexes);
+        ContextAnalyzer contextAnalyzer = new ContextAnalyzer(body.toLowerCase(),
+            payloadIndexes);
         symbols = contextAnalyzer.getIssuesForAllParameters();
+
         if (symbols.length() > 0) {
           parameter.put(VULNERABLE, symbols);
         }
       }
     }
+
     return reflectedParameters;
   }
 
   private String checkWhereReflectionPlaced(List<int[]> listOfMatches) {
     String reflectIn = "";
+
     for (int[] matches : listOfMatches) {
       if (matches[0] >= bodyOffset)
-        if (reflectIn.equals(HEADERS)) return BOTH;
-        else reflectIn = BODY;
-      else if (reflectIn.equals(BODY)) return BOTH;
-      else reflectIn = HEADERS;
+        if (reflectIn.equals(HEADERS)) {
+          return BOTH;
+        } else {
+          reflectIn = BODY;
+        } else if (reflectIn.equals(BODY)) {
+        return BOTH;
+      } else {
+        reflectIn = HEADERS;
+      }
     }
+
     return reflectIn;
   }
 
@@ -106,9 +128,14 @@ public class CheckReflection {
     List<int[]> matches = new ArrayList<int[]>();
 
     int start = 0;
+
     while (start < response.length) {
       start = helpers.indexOf(response, match, true, start, response.length);
-      if (start == -1) break;
+
+      if (start == -1) {
+        break;
+      }
+
       matches.add(new int[] {start, start + match.length});
       start += match.length;
     }
@@ -174,82 +201,93 @@ class Aggressive {
   private Settings settings;
 
   Aggressive(
-      Settings settings,
-      IExtensionHelpers helpers,
-      IHttpRequestResponse baseRequestResponse,
-      IBurpExtenderCallbacks callbacks,
-      List<Map> reflectedParameters) {
+    Settings settings,
+    IExtensionHelpers helpers,
+    IHttpRequestResponse baseRequestResponse,
+    IBurpExtenderCallbacks callbacks,
+    List<Map> reflectedParameters) {
     this.helpers = helpers;
     this.callbacks = callbacks;
     this.reflectedParameters = reflectedParameters;
     this.baseRequestResponse = baseRequestResponse;
     this.host = helpers.analyzeRequest(baseRequestResponse).getUrl().getHost();
     this.port = helpers.analyzeRequest(baseRequestResponse).getUrl().getPort();
-    this.pattern = Pattern.compile(PAYLOAD_GREP + "([_%&;\"'<#\\\\0-9a-z]{1,15}?)" + PAYLOAD_GREP);
+    this.pattern = Pattern.compile(PAYLOAD_GREP + "([_%&;\"'<#\\\\0-9a-z]{1,15}?)" +
+                                   PAYLOAD_GREP);
     this.settings = settings;
   }
 
   public List<Map> scanReflectedParameters() {
     String testRequest = "", symbols = "";
+
     for (Map param : reflectedParameters) {
       if (param.get(REFLECTED_IN) == HEADERS) {
         continue;
       }
+
       testRequest = prepareRequest(param);
       symbols = checkRespone(testRequest);
+
       if (!symbols.equals("")) {
         param.put(VULNERABLE, symbols);
       }
     }
+
     return reflectedParameters;
   }
 
   public static String prepareReflectedPayload(String value) {
     return value
-        .replaceAll("[^<\"'\\\\]", "")
-        .replaceAll("(\\\\\"|\\\\')", "")
-        .replaceAll("[\\\\]", "");
+           .replaceAll("[^<\"'\\\\]", "")
+           .replaceAll("(\\\\\"|\\\\')", "")
+           .replaceAll("[\\\\]", "");
   }
 
   private String checkRespone(String testRequest) {
     String reflectedPayloadValue = "", symbols = "";
     int bodyOffset;
+
     try {
       String response = new Client(callbacks).run(testRequest, host, this.port);
       bodyOffset = response.indexOf("\n\n") + 2;
 
       Matcher matcher = this.pattern.matcher(response);
       ArrayList<int[]> payloadIndexes = new ArrayList<>();
+
       while (matcher.find()) {
         payloadIndexes.add(new int[] {matcher.start() - bodyOffset, matcher.end() - bodyOffset});
       }
+
       matcher = null;
 
       if (settings.getCheckContext() && bodyOffset != 1) {
         ContextAnalyzer contextAnalyzer =
-            new ContextAnalyzer(response.substring(bodyOffset).toLowerCase(), payloadIndexes);
+          new ContextAnalyzer(response.substring(bodyOffset).toLowerCase(),
+                              payloadIndexes);
         symbols = contextAnalyzer.getIssuesForAllParameters();
       } else if (bodyOffset != 1) {
         for (int[] indexPair : payloadIndexes) {
           reflectedPayloadValue =
-              Aggressive.prepareReflectedPayload(
-                  response.substring(indexPair[0] + bodyOffset, indexPair[1] + bodyOffset));
+            Aggressive.prepareReflectedPayload(
+              response.substring(indexPair[0] + bodyOffset, indexPair[1] + bodyOffset));
+
           if (reflectedPayloadValue.length() > 0) {
             for (String str : reflectedPayloadValue.split("")) {
               symbols += str + " ";
             }
           }
+
           symbols = symbols + " || ";
         }
 
         if (!symbols.equals("")) {
           symbols =
-              symbols
-                  .substring(0, symbols.length() - 4)
-                  .replaceAll("<", "&lt;")
-                  .replaceAll("'", "&#39;")
-                  .replaceAll("\"", "&quot;")
-                  .replaceAll("\\|\\|", "<b>|</b>");
+            symbols
+            .substring(0, symbols.length() - 4)
+            .replaceAll("<", "&lt;")
+            .replaceAll("'", "&#39;")
+            .replaceAll("\"", "&quot;")
+            .replaceAll("\\|\\|", "<b>|</b>");
         }
       }
     } catch (IOException e) {
@@ -264,46 +302,54 @@ class Aggressive {
     } catch (KeyStoreException e) {
       callbacks.printError(e.getMessage());
     }
+
     return symbols;
   }
 
   private String prepareRequest(Map parameter) {
     String payload = PAYLOAD;
+
     if (parameter.get(TYPE).equals(IParameter.PARAM_JSON)) {
       payload = PAYLOAD_JSON;
     }
 
     String tmpRequest =
-        helpers
-                .bytesToString(baseRequestResponse.getRequest())
-                .substring(0, (int) parameter.get("ValueStart"))
-            + PAYLOAD_GREP
-            + payload
-            + PAYLOAD_GREP
-            + helpers
-                .bytesToString(baseRequestResponse.getRequest())
-                .substring((int) parameter.get("ValueEnd"));
+      helpers
+      .bytesToString(baseRequestResponse.getRequest())
+      .substring(0, (int) parameter.get("ValueStart"))
+      + PAYLOAD_GREP
+      + payload
+      + PAYLOAD_GREP
+      + helpers
+      .bytesToString(baseRequestResponse.getRequest())
+      .substring((int) parameter.get("ValueEnd"));
     String contentLength = "";
+
     for (String header : helpers.analyzeRequest(baseRequestResponse).getHeaders()) {
       if (header.toLowerCase().contains("content-length")) {
         contentLength = header;
         break;
       }
     }
+
     if (contentLength.equals("")
         || (int) parameter.get(VALUE_START)
-            < helpers.analyzeRequest(baseRequestResponse).getBodyOffset()) {
+        < helpers.analyzeRequest(baseRequestResponse).getBodyOffset()) {
       return tmpRequest;
     }
-    int paramLength = (int) parameter.get(VALUE_END) - (int) parameter.get(VALUE_START);
+
+    int paramLength = (int) parameter.get(VALUE_END) - (int) parameter.get(
+                        VALUE_START);
     int lengthDiff = (PAYLOAD_GREP + payload + PAYLOAD_GREP).length() - paramLength;
     String contentLengthString = contentLength.split(": ")[1].trim();
     int contentLengthInt = Integer.parseInt(contentLengthString) + lengthDiff;
-    int contentLengthIntOffsetStart = tmpRequest.toLowerCase().indexOf("content-length");
+    int contentLengthIntOffsetStart =
+      tmpRequest.toLowerCase().indexOf("content-length");
     tmpRequest =
-        tmpRequest.substring(0, contentLengthIntOffsetStart + 16)
-            + String.valueOf(contentLengthInt)
-            + tmpRequest.substring(contentLengthIntOffsetStart + 16 + contentLengthString.length());
+      tmpRequest.substring(0, contentLengthIntOffsetStart + 16)
+      + String.valueOf(contentLengthInt)
+      + tmpRequest.substring(contentLengthIntOffsetStart + 16 +
+                             contentLengthString.length());
     return tmpRequest;
   }
 }

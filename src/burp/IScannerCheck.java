@@ -55,8 +55,8 @@ public interface IScannerCheck
      * if no issues are identified.
      */
     List<IScanIssue> doActiveScan(
-            IHttpRequestResponse baseRequestResponse,
-            IScannerInsertionPoint insertionPoint);
+        IHttpRequestResponse baseRequestResponse,
+        IScannerInsertionPoint insertionPoint);
 
     /**
      * The Scanner invokes this method when the custom Scanner check has
@@ -78,6 +78,6 @@ public interface IScannerCheck
      * <code>1</code> to report the new issue only.
      */
     int consolidateDuplicateIssues(
-            IScanIssue existingIssue,
-            IScanIssue newIssue);
+        IScanIssue existingIssue,
+        IScanIssue newIssue);
 }

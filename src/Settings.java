@@ -23,9 +23,18 @@ class Settings {
     scopeOnly = callbacks.loadExtensionSetting(SCOPE_ONLY);
     checkContext = callbacks.loadExtensionSetting(CHECK_CONTEXT);
     aggressiveMode = callbacks.loadExtensionSetting(AGGRESSIVE_MODE);
-    if (scopeOnly == null) scopeOnly = FALSE_CONST;
-    if (aggressiveMode == null) aggressiveMode = TRUE_CONST;
-    if (checkContext == null) checkContext = FALSE_CONST;
+
+    if (scopeOnly == null) {
+      scopeOnly = FALSE_CONST;
+    }
+
+    if (aggressiveMode == null) {
+      aggressiveMode = TRUE_CONST;
+    }
+
+    if (checkContext == null) {
+      checkContext = FALSE_CONST;
+    }
 
     this.loadContentTypes();
   }
@@ -36,26 +45,31 @@ class Settings {
 
   private String prepareArray() {
     String result = "";
+
     for (Object[] object : contentTypes) {
       result += String.valueOf(object[0]);
       result += DIVIDER_OBJECT;
       result += String.valueOf(object[1]);
       result += DIVIDER_ARRAY;
     }
+
     result.substring(0, DIVIDER_ARRAY.length());
     return result;
   }
 
   private ArrayList<Object[]> extractArray(String arrayPrepared) {
     ArrayList<Object[]> extractedArray = new ArrayList<Object[]>();
-    String[] splitted = arrayPrepared.toLowerCase().split(Pattern.quote(DIVIDER_ARRAY));
+    String[] splitted = arrayPrepared.toLowerCase().split(Pattern.quote(
+                          DIVIDER_ARRAY));
+
     for (String objects : splitted) {
       extractedArray.add(
-          new Object[] {
-            Boolean.valueOf(objects.split(Pattern.quote(DIVIDER_OBJECT))[0]),
-            String.valueOf(objects.split(Pattern.quote(DIVIDER_OBJECT))[1])
-          });
+        new Object[] {
+          Boolean.valueOf(objects.split(Pattern.quote(DIVIDER_OBJECT))[0]),
+          String.valueOf(objects.split(Pattern.quote(DIVIDER_OBJECT))[1])
+        });
     }
+
     return extractedArray;
   }
 
@@ -84,19 +98,25 @@ class Settings {
 
   public void saveContentTypes() {
     String contentTypesString = null;
-    if (contentTypes.size() != 0) contentTypesString = prepareArray();
+
+    if (contentTypes.size() != 0) {
+      contentTypesString = prepareArray();
+    }
+
     callbacks.saveExtensionSetting(CONTENT_TYPES, contentTypesString);
     this.enabledCntentTypes = extractEnabledContentTypes();
   }
 
   private void loadContentTypes() {
     String preparedArray = this.callbacks.loadExtensionSetting(CONTENT_TYPES);
+
     if (preparedArray == null) {
       contentTypes = new ArrayList<Object[]>();
       contentTypes.add(new Object[] {Boolean.TRUE, "text/html"});
     } else {
       contentTypes = this.extractArray(preparedArray);
     }
+
     this.enabledCntentTypes = extractEnabledContentTypes();
   }
 
@@ -106,9 +126,13 @@ class Settings {
 
   public ArrayList<String> extractEnabledContentTypes() {
     ArrayList<String> enableContentTypes = new ArrayList();
+
     for (Object[] object : contentTypes) {
-      if (Boolean.valueOf((Boolean) object[0])) enableContentTypes.add(((String) object[1]));
+      if (Boolean.valueOf((Boolean) object[0])) {
+        enableContentTypes.add(((String) object[1]));
+      }
     }
+
     return (enableContentTypes.size() == 0) ? null : enableContentTypes;
   }
 

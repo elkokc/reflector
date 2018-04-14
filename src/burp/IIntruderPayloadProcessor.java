@@ -39,7 +39,7 @@ public interface IIntruderPayloadProcessor
      * and the attack will move directly to the next payload.
      */
     byte[] processPayload(
-            byte[] currentPayload,
-            byte[] originalPayload,
-            byte[] baseValue);
+        byte[] currentPayload,
+        byte[] originalPayload,
+        byte[] baseValue);
 }

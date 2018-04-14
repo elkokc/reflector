@@ -32,6 +32,6 @@ public interface IProxyListener
      * modification.
      */
     void processProxyMessage(
-            boolean messageIsRequest,
-            IInterceptedProxyMessage message);
+        boolean messageIsRequest,
+        IInterceptedProxyMessage message);
 }

@@ -34,5 +34,5 @@ public interface IMessageEditorTabFactory
      * <code>IMessageEditorTab</code> object for use within the message editor.
      */
     IMessageEditorTab createNewInstance(IMessageEditorController controller,
-            boolean editable);
+                                        boolean editable);
 }

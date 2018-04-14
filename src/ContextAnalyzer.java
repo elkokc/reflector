@@ -63,61 +63,76 @@ class ContextAnalyzer {
 
   private int[] makeStartIndexes() {
     int[] tmp = new int[this.tagList.size()];
+
     for (int i = 0; i < this.tagList.size(); i++) {
       tmp[i] = this.tagList.get(i).start;
     }
+
     return tmp;
   }
 
   public String getContext(int start) {
     int place = Arrays.binarySearch(this.startIndexes, start);
+
     if (place == -1 || place * -1 > this.startIndexes.length || place > -1) {
       return CONTEXT_OUT_OF_TAG;
     } else {
       place = place * -1 - 1;
-      if (this.tagList.get(place - 1).end < start && this.tagList.get(place).start > start) {
+
+      if (this.tagList.get(place - 1).end < start
+          && this.tagList.get(place).start > start) {
         if (this.tagList.get(place - 1).name.equals("script")) {
           return checkScript(place - 1, start);
         }
+
         return CONTEXT_OUT_OF_TAG;
       }
+
       return checkContextInTag(this.tagList.get(place - 1).attrList, start);
     }
   }
 
   public String getIssuesForAllParameters() {
-    String reflectedPayloadValue = "", contextChars = null, context = "", symbols = "";
+    String reflectedPayloadValue = "", contextChars = null, context = "",
+           symbols = "";
+
     for (Reflection payload : this.reflections) {
       reflectedPayloadValue = Aggressive.prepareReflectedPayload(payload.value);
+
       if (reflectedPayloadValue.length() > 0 && payload.getStart() >= 0) {
         context = getContext(payload.getStart());
         contextChars = checksContextSecurity(reflectedPayloadValue, context);
+
         if (contextChars != null) {
           this.vulnerableFlag = true;
           symbols += String.valueOf(context);
           reflectedPayloadValue = reflectedPayloadValue.replace(contextChars, "");
+
           if (reflectedPayloadValue.length() > 0) {
             symbols += "\nother chars: ";
           }
         }
+
         if (reflectedPayloadValue.length() > 0) {
           for (String str : reflectedPayloadValue.split("")) {
             symbols += str + " ";
           }
         }
+
         symbols = symbols + " || ";
       }
     }
 
     if (!symbols.equals("")) {
       symbols =
-          symbols
-              .substring(0, symbols.length() - 4)
-              .replaceAll("<", "&lt;")
-              .replaceAll("'", "&#39;")
-              .replaceAll("\"", "&quot;")
-              .replaceAll("\\|\\|", "<b>|</b>")
-              .replaceAll("\\n", "<br>");
+        symbols
+        .substring(0, symbols.length() - 4)
+        .replaceAll("<", "&lt;")
+        .replaceAll("'", "&#39;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("\\|\\|", "<b>|</b>")
+        .replaceAll("\\n", "<br>");
+
       if (vulnerableFlag) {
         symbols += CONTEXT_VULN_FLAG;
       }
@@ -128,43 +143,62 @@ class ContextAnalyzer {
 
   private String checkScript(int place, int start) {
     String tmpContext =
-        this.body.substring(this.tagList.get(place).end, start).replaceAll("\\[\"']", "");
+      this.body.substring(this.tagList.get(place).end, start).replaceAll("\\[\"']",
+          "");
     int quote = 0;
     int doubleQuote = 0;
+
     for (char c : tmpContext.toCharArray()) {
       if (c == '\'' && doubleQuote == 0)
-        if (quote == 1) quote = 0;
-        else quote = 1;
-      else if (c == '"' && quote == 0)
-        if (doubleQuote == 1) doubleQuote = 0;
-        else doubleQuote = 1;
+        if (quote == 1) {
+          quote = 0;
+        } else {
+          quote = 1;
+        } else if (c == '"' && quote == 0)
+        if (doubleQuote == 1) {
+          doubleQuote = 0;
+        } else {
+          doubleQuote = 1;
+        }
     }
-    if (quote == 1) return CONTEXT_IN_SCRIPT_TAG_STRING_Q;
-    if (doubleQuote == 1) return CONTEXT_IN_SCRIPT_TAG_STRING_DQ;
+
+    if (quote == 1) {
+      return CONTEXT_IN_SCRIPT_TAG_STRING_Q;
+    }
+
+    if (doubleQuote == 1) {
+      return CONTEXT_IN_SCRIPT_TAG_STRING_DQ;
+    }
+
     return CONTEXT_IN_SCRIPT_TAG;
   }
 
   private String checkContextInTag(ArrayList<Attribute> attrList, int start) {
     char delimiter = '\0';
+
     for (Attribute attr : attrList) {
       if (attr.start <= start && attr.end >= start) {
         delimiter = attr.delimiter;
         break;
       }
     }
+
     switch (delimiter) {
-      case '\'':
-        return CONTEXT_IN_ATTRIBUTE_Q;
-      case '"':
-        return CONTEXT_IN_ATTRIBUTE_DQ;
-      default:
-        return CONTEXT_IN_TAG;
+    case '\'':
+      return CONTEXT_IN_ATTRIBUTE_Q;
+
+    case '"':
+      return CONTEXT_IN_ATTRIBUTE_DQ;
+
+    default:
+      return CONTEXT_IN_TAG;
     }
   }
 
   private void deleteTagsBetweenScript() {
     ArrayList<Tag> tmpTags = new ArrayList<>();
     boolean script = false;
+
     for (Tag tag : this.tagList) {
       if (tag.name.equals("script") && !script) {
         script = true;
@@ -175,11 +209,14 @@ class ContextAnalyzer {
         tmpTags.add(tag);
         continue;
       }
+
       if (script) {
         continue;
       }
+
       tmpTags.add(tag);
     }
+
     this.tagList = tmpTags;
   }
 
@@ -187,25 +224,29 @@ class ContextAnalyzer {
     String tmpBody = body;
     this.reflections = new ArrayList<>();
     int totalShift = 0;
+
     for (int[] indexPair : indexes) {
       if (indexPair[0] < 0) {
         continue;
       }
+
       this.reflections.add(
-          new Reflection(
-              indexPair[0] - totalShift,
-              tmpBody.substring(indexPair[0] - totalShift, indexPair[1] - totalShift)));
+        new Reflection(
+          indexPair[0] - totalShift,
+          tmpBody.substring(indexPair[0] - totalShift, indexPair[1] - totalShift)));
       tmpBody =
-          tmpBody.substring(0, indexPair[0] - totalShift)
-              + tmpBody.substring(indexPair[1] - totalShift);
+        tmpBody.substring(0, indexPair[0] - totalShift)
+        + tmpBody.substring(indexPair[1] - totalShift);
       totalShift += indexPair[1] - indexPair[0];
     }
+
     return tmpBody;
   }
 
   private void parseBody(String body) {
     String alphabet = "qwer/tyuiopasdfghjklzxcvbnm", name = "", tmpName = "";
-    int attrStep = -1, startTag = -1, startAttr = -1, i = 0, bodyLength = body.length();
+    int attrStep = -1, startTag = -1, startAttr = -1, i = 0,
+        bodyLength = body.length();
     char attrDelimiter = '\0';
     ArrayList<Attribute> tmpAttributes = null;
 
@@ -217,6 +258,7 @@ class ContextAnalyzer {
           startTag = i;
           tmpAttributes = new ArrayList<Attribute>();
         }
+
         i += 1;
       } else if (startAttr == -1) {
         while ((name.equals("")) && (i < bodyLength)) {
@@ -242,13 +284,21 @@ class ContextAnalyzer {
             i += 1;
             break;
           } else if (attrStep == -1) {
-            if (body.charAt(i) != ' ') attrStep = 0;
+            if (body.charAt(i) != ' ') {
+              attrStep = 0;
+            }
           } else if (attrStep == 0) {
-            if (body.charAt(i) == ' ') attrStep = 1;
-            else if (body.charAt(i) == '=') attrStep = 2;
+            if (body.charAt(i) == ' ') {
+              attrStep = 1;
+            } else if (body.charAt(i) == '=') {
+              attrStep = 2;
+            }
           } else if (attrStep == 1) {
-            if (body.charAt(i) == '=') attrStep = 2;
-            else if (body.charAt(i) != ' ') attrStep = -1;
+            if (body.charAt(i) == '=') {
+              attrStep = 2;
+            } else if (body.charAt(i) != ' ') {
+              attrStep = -1;
+            }
           } else if (attrStep == 2) {
             if (body.charAt(i) == '"' || body.charAt(i) == '\'') {
               attrDelimiter = body.charAt(i);
@@ -257,6 +307,7 @@ class ContextAnalyzer {
               startAttr = i - 1;
             }
           }
+
           i += 1;
         }
       } else {
@@ -275,55 +326,62 @@ class ContextAnalyzer {
 
   private String checksContextSecurity(String reflectedPayload, String context) {
     String contextChars = null;
+
     switch (context) {
-      case CONTEXT_OUT_OF_TAG:
-        {
-          if (reflectedPayload.contains("<")) {
-            contextChars = "<";
-          }
-        }
-        break;
-      case CONTEXT_IN_ATTRIBUTE_Q:
-        {
-          if (reflectedPayload.contains("'")) {
-            contextChars = "'";
-          }
-        }
-        break;
-      case CONTEXT_IN_ATTRIBUTE_DQ:
-        {
-          if (reflectedPayload.contains("\"")) {
-            contextChars = "\"";
-          }
-        }
-        break;
-      case CONTEXT_IN_TAG:
-        {
-          if (reflectedPayload.length() > 0) contextChars = reflectedPayload;
-          else contextChars = "ALL";
-        }
-        break;
-      case CONTEXT_IN_SCRIPT_TAG_STRING_Q:
-        {
-          if (reflectedPayload.contains("'")) {
-            contextChars = "'";
-          }
-        }
-        break;
-      case CONTEXT_IN_SCRIPT_TAG_STRING_DQ:
-        {
-          if (reflectedPayload.contains("\"")) {
-            contextChars = "\"";
-          }
-        }
-        break;
-      case CONTEXT_IN_SCRIPT_TAG:
-        {
-          if (reflectedPayload.length() > 0) contextChars = reflectedPayload;
-          else contextChars = "ALL";
-        }
-        break;
+    case CONTEXT_OUT_OF_TAG: {
+      if (reflectedPayload.contains("<")) {
+        contextChars = "<";
+      }
     }
+    break;
+
+    case CONTEXT_IN_ATTRIBUTE_Q: {
+      if (reflectedPayload.contains("'")) {
+        contextChars = "'";
+      }
+    }
+    break;
+
+    case CONTEXT_IN_ATTRIBUTE_DQ: {
+      if (reflectedPayload.contains("\"")) {
+        contextChars = "\"";
+      }
+    }
+    break;
+
+    case CONTEXT_IN_TAG: {
+      if (reflectedPayload.length() > 0) {
+        contextChars = reflectedPayload;
+      } else {
+        contextChars = "ALL";
+      }
+    }
+    break;
+
+    case CONTEXT_IN_SCRIPT_TAG_STRING_Q: {
+      if (reflectedPayload.contains("'")) {
+        contextChars = "'";
+      }
+    }
+    break;
+
+    case CONTEXT_IN_SCRIPT_TAG_STRING_DQ: {
+      if (reflectedPayload.contains("\"")) {
+        contextChars = "\"";
+      }
+    }
+    break;
+
+    case CONTEXT_IN_SCRIPT_TAG: {
+      if (reflectedPayload.length() > 0) {
+        contextChars = reflectedPayload;
+      } else {
+        contextChars = "ALL";
+      }
+    }
+    break;
+    }
+
     return contextChars;
   }
 }

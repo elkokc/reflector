@@ -48,7 +48,7 @@ public interface ICookie
 
     /**
      * This method is used to retrieve the name of the cookie.
-     * 
+     *
      * @return The name of the cookie.
      */
     String getName();

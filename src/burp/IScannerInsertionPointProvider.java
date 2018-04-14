@@ -34,5 +34,5 @@ public interface IScannerInsertionPointProvider
      * request.
      */
     List<IScannerInsertionPoint> getInsertionPoints(
-            IHttpRequestResponse baseRequestResponse);
+        IHttpRequestResponse baseRequestResponse);
 }

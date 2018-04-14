@@ -331,7 +331,7 @@ public interface IBurpExtenderCallbacks
      * <code>IScannerInsertionPointProvider</code> interface.
      */
     void registerScannerInsertionPointProvider(
-            IScannerInsertionPointProvider provider);
+        IScannerInsertionPointProvider provider);
 
     /**
      * This method is used to retrieve the Scanner insertion point providers
@@ -349,7 +349,7 @@ public interface IBurpExtenderCallbacks
      * @param provider The Scanner insertion point provider to be removed.
      */
     void removeScannerInsertionPointProvider(
-            IScannerInsertionPointProvider provider);
+        IScannerInsertionPointProvider provider);
 
     /**
      * This method is used to register a custom Scanner check. When performing
@@ -390,7 +390,7 @@ public interface IBurpExtenderCallbacks
      * <code>IIntruderPayloadGeneratorFactory</code> interface.
      */
     void registerIntruderPayloadGeneratorFactory(
-            IIntruderPayloadGeneratorFactory factory);
+        IIntruderPayloadGeneratorFactory factory);
 
     /**
      * This method is used to retrieve the Intruder payload generator factories
@@ -400,7 +400,7 @@ public interface IBurpExtenderCallbacks
      * registered by this extension.
      */
     List<IIntruderPayloadGeneratorFactory>
-            getIntruderPayloadGeneratorFactories();
+    getIntruderPayloadGeneratorFactories();
 
     /**
      * This method is used to remove an Intruder payload generator factory that
@@ -409,7 +409,7 @@ public interface IBurpExtenderCallbacks
      * @param factory The Intruder payload generator factory to be removed.
      */
     void removeIntruderPayloadGeneratorFactory(
-            IIntruderPayloadGeneratorFactory factory);
+        IIntruderPayloadGeneratorFactory factory);
 
     /**
      * This method is used to register a custom Intruder payload processor. Each
@@ -517,7 +517,7 @@ public interface IBurpExtenderCallbacks
      * interface, and which the extension can use in its own UI.
      */
     IMessageEditor createMessageEditor(IMessageEditorController controller,
-            boolean editable);
+                                       boolean editable);
 
     /**
      * This method returns the command line arguments that were passed to Burp
@@ -572,11 +572,11 @@ public interface IBurpExtenderCallbacks
      * default tab index will be displayed.
      */
     void sendToRepeater(
-            String host,
-            int port,
-            boolean useHttps,
-            byte[] request,
-            String tabCaption);
+        String host,
+        int port,
+        boolean useHttps,
+        byte[] request,
+        String tabCaption);
 
     /**
      * This method can be used to send an HTTP request to the Burp Intruder
@@ -590,10 +590,10 @@ public interface IBurpExtenderCallbacks
      * @param request The full HTTP request.
      */
     void sendToIntruder(
-            String host,
-            int port,
-            boolean useHttps,
-            byte[] request);
+        String host,
+        int port,
+        boolean useHttps,
+        byte[] request);
 
     /**
      * This method can be used to send an HTTP request to the Burp Intruder
@@ -610,11 +610,11 @@ public interface IBurpExtenderCallbacks
      * array containing the start and end offsets for the payload position.
      */
     void sendToIntruder(
-            String host,
-            int port,
-            boolean useHttps,
-            byte[] request,
-            List<int[]> payloadPositionOffsets);
+        String host,
+        int port,
+        boolean useHttps,
+        byte[] request,
+        List<int[]> payloadPositionOffsets);
 
     /**
      * This method can be used to send data to the Comparer tool.
@@ -633,7 +633,7 @@ public interface IBurpExtenderCallbacks
      * @param url The new seed URL to begin spidering from.
      */
     void sendToSpider(
-            java.net.URL url);
+        java.net.URL url);
 
     /**
      * This method can be used to send an HTTP request to the Burp Scanner tool
@@ -648,10 +648,10 @@ public interface IBurpExtenderCallbacks
      * @return The resulting scan queue item.
      */
     IScanQueueItem doActiveScan(
-            String host,
-            int port,
-            boolean useHttps,
-            byte[] request);
+        String host,
+        int port,
+        boolean useHttps,
+        byte[] request);
 
     /**
      * This method can be used to send an HTTP request to the Burp Scanner tool
@@ -671,11 +671,11 @@ public interface IBurpExtenderCallbacks
      * @return The resulting scan queue item.
      */
     IScanQueueItem doActiveScan(
-            String host,
-            int port,
-            boolean useHttps,
-            byte[] request,
-            List<int[]> insertionPointOffsets);
+        String host,
+        int port,
+        boolean useHttps,
+        byte[] request,
+        List<int[]> insertionPointOffsets);
 
     /**
      * This method can be used to send an HTTP request to the Burp Scanner tool
@@ -688,11 +688,11 @@ public interface IBurpExtenderCallbacks
      * @param response The full HTTP response.
      */
     void doPassiveScan(
-            String host,
-            int port,
-            boolean useHttps,
-            byte[] request,
-            byte[] response);
+        String host,
+        int port,
+        boolean useHttps,
+        byte[] request,
+        byte[] response);
 
     /**
      * This method can be used to issue HTTP requests and retrieve their
@@ -705,7 +705,7 @@ public interface IBurpExtenderCallbacks
      * response.
      */
     IHttpRequestResponse makeHttpRequest(IHttpService httpService,
-            byte[] request);
+                                         byte[] request);
 
     /**
      * This method can be used to issue HTTP requests and retrieve their
@@ -718,10 +718,10 @@ public interface IBurpExtenderCallbacks
      * @return The full response retrieved from the remote server.
      */
     byte[] makeHttpRequest(
-            String host,
-            int port,
-            boolean useHttps,
-            byte[] request);
+        String host,
+        int port,
+        boolean useHttps,
+        byte[] request);
 
     /**
      * This method can be used to query whether a specified URL is within the
@@ -802,7 +802,7 @@ public interface IBurpExtenderCallbacks
      * @param file The file to which the report will be saved.
      */
     void generateScanReport(String format, IScanIssue[] issues,
-            java.io.File file);
+                            java.io.File file);
 
     /**
      * This method is used to retrieve the contents of Burp's session handling
@@ -979,7 +979,7 @@ public interface IBurpExtenderCallbacks
      * <code>IHttpRequestResponsePersisted</code> interface.
      */
     IHttpRequestResponsePersisted saveBuffersToTempFiles(
-            IHttpRequestResponse httpRequestResponse);
+        IHttpRequestResponse httpRequestResponse);
 
     /**
      * This method is used to apply markers to an HTTP request or response, at
@@ -1006,9 +1006,9 @@ public interface IBurpExtenderCallbacks
      * <code>IHttpRequestResponseWithMarkers</code> interface.
      */
     IHttpRequestResponseWithMarkers applyMarkers(
-            IHttpRequestResponse httpRequestResponse,
-            List<int[]> requestMarkers,
-            List<int[]> responseMarkers);
+        IHttpRequestResponse httpRequestResponse,
+        List<int[]> requestMarkers,
+        List<int[]> responseMarkers);
 
     /**
      * This method is used to obtain the descriptive name for the Burp tool
@@ -1083,6 +1083,6 @@ public interface IBurpExtenderCallbacks
      */
     @Deprecated
     void registerMenuItem(
-            String menuItemCaption,
-            IMenuItemHandler menuItemHandler);
+        String menuItemCaption,
+        IMenuItemHandler menuItemHandler);
 }

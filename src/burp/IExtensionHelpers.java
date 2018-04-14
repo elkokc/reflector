@@ -194,10 +194,10 @@ public interface IExtensionHelpers
      * specified bounds, or -1 if no match is found.
      */
     int indexOf(byte[] data,
-            byte[] pattern,
-            boolean caseSensitive,
-            int from,
-            int to);
+                byte[] pattern,
+                boolean caseSensitive,
+                int from,
+                int to);
 
     /**
      * This method builds an HTTP message containing the specified headers and
@@ -325,10 +325,10 @@ public interface IExtensionHelpers
      * details provided.
      */
     IScannerInsertionPoint makeScannerInsertionPoint(
-            String insertionPointName,
-            byte[] baseRequest,
-            int from,
-            int to);
+        String insertionPointName,
+        byte[] baseRequest,
+        int from,
+        int to);
 
     /**
      * This method analyzes one or more responses to identify variations in a

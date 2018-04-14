@@ -32,6 +32,6 @@ public interface IHttpListener
      * current message and so modify Burp's behavior.
      */
     void processHttpMessage(int toolFlag,
-            boolean messageIsRequest,
-            IHttpRequestResponse messageInfo);
+                            boolean messageIsRequest,
+                            IHttpRequestResponse messageInfo);
 }

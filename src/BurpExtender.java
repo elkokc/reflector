@@ -18,7 +18,6 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
   private static final String DESCRIPTION_DETAILS = "Reflected parameters in ";
   private static final String XSS_POSSIBLE = "XSS (possible)";
   private static final String XSS_VULNERABLE = "XSS (vulnerable)";
-  String issueName = XSS_POSSIBLE;
   public static final String ALLOWED_CONTENT_TYPE = "Allowed Content-Type";
   public static final String DELETE = "Delete";
   public static final String ADD = "Add";
@@ -36,8 +35,9 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
   private JCheckBox aggressiveMode;
   private JCheckBox checkContext;
   private Settings settings;
-
   private CheckReflection checkReflection;
+
+  String issueName = XSS_POSSIBLE;
 
   @Override
   public void registerExtenderCallbacks(final IBurpExtenderCallbacks callbacks) {
@@ -53,73 +53,77 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
     callbacks.registerScannerCheck(this);
 
     SwingUtilities.invokeLater(
-        new Runnable() {
-          @Override
-          public void run() {
-            settings = new Settings(callbacks);
-            panel = new JPanel();
-            panel.setLayout(null);
+    new Runnable() {
+      @Override
+      public void run() {
+        settings = new Settings(callbacks);
+        panel = new JPanel();
+        panel.setLayout(null);
 
-            final JLabel label1 = new JLabel(OPTIONS_NAME);
-            label1.setFont(new Font(label1.getFont().getName(), Font.BOLD, 16));
-            label1.setBounds(58, 20, 130, 20);
-            panel.add(label1);
+        final JLabel label1 = new JLabel(OPTIONS_NAME);
+        label1.setFont(new Font(label1.getFont().getName(), Font.BOLD, 16));
+        label1.setBounds(58, 20, 130, 20);
+        panel.add(label1);
 
-            model = new BurpTableModel(settings);
+        model = new BurpTableModel(settings);
 
-            table = new JTable(model);
-            TableColumnModel columnModel = table.getColumnModel();
-            columnModel.getColumn(0).setPreferredWidth(65);
-            columnModel.getColumn(1).setPreferredWidth(330);
+        table = new JTable(model);
+        TableColumnModel columnModel = table.getColumnModel();
+        columnModel.getColumn(0).setPreferredWidth(65);
+        columnModel.getColumn(1).setPreferredWidth(330);
 
-            JScrollPane sp = new JScrollPane(table);
-            table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-            sp.setBounds(58, 200, 400, 250);
-            sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-            sp.setPreferredSize(new Dimension(400, 250));
+        JScrollPane sp = new JScrollPane(table);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        sp.setBounds(58, 200, 400, 250);
+        sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        sp.setPreferredSize(new Dimension(400, 250));
 
-            deleteButton = new JButton(DELETE);
-            deleteButton.setBounds(58, 470, 130, 30);
-            panel.add(deleteButton);
-            panel.add(sp);
+        deleteButton = new JButton(DELETE);
+        deleteButton.setBounds(58, 470, 130, 30);
+        panel.add(deleteButton);
+        panel.add(sp);
 
-            contetTtypeTextField = new JTextField();
-            contetTtypeTextField.setBounds(200, 143, 160, 29);
-            panel.add(contetTtypeTextField);
-            contetTtypeTextField.setColumns(10);
+        contetTtypeTextField = new JTextField();
+        contetTtypeTextField.setBounds(200, 143, 160, 29);
+        panel.add(contetTtypeTextField);
+        contetTtypeTextField.setColumns(10);
 
-            JLabel addLabel = new JLabel(ALLOWED_CONTENT_TYPE);
-            addLabel.setBounds(58, 150, 140, 16);
-            addLabel.setFont(new Font(label1.getFont().getName(), Font.PLAIN, 14));
-            panel.add(addLabel);
-            addButton = new JButton(ADD);
-            addButton.setBounds(370, 143, 84, 30);
-            panel.add(addButton);
-            BurpExtender.OptionPanel optionPanel1 = placeOption(SCOPE_ONLY);
-            JPanel option1 = optionPanel1.getPanel();
-            scopeOnly = optionPanel1.getCheckBox();
-            scopeOnly.setSelected(settings.getScopeOnly());
-            option1.setBounds(58, 43, 130, 20);
-            panel.add(option1);
-            BurpExtender.OptionPanel optionPanel2 = placeOption(AGGRESSIVE_MODE);
-            JPanel option2 = optionPanel2.getPanel();
-            aggressiveMode = optionPanel2.getCheckBox();
-            aggressiveMode.setSelected(settings.getAggressiveMode());
-            option2.setBounds(58, 63, 135, 20);
-            panel.add(option2);
-            BurpExtender.OptionPanel optionPanel3 = placeOption(CHECK_CONTEXT);
-            JPanel option3 = optionPanel3.getPanel();
-            checkContext = optionPanel3.getCheckBox();
-            checkContext.setSelected(settings.getCheckContext());
-            option3.setBounds(58, 83, 130, 20);
-            panel.add(option3);
+        JLabel addLabel = new JLabel(ALLOWED_CONTENT_TYPE);
+        addLabel.setBounds(58, 150, 140, 16);
+        addLabel.setFont(new Font(label1.getFont().getName(), Font.PLAIN, 14));
+        panel.add(addLabel);
 
-            initListener();
+        addButton = new JButton(ADD);
+        addButton.setBounds(370, 143, 84, 30);
+        panel.add(addButton);
 
-            callbacks.customizeUiComponent(panel);
-            callbacks.addSuiteTab(BurpExtender.this);
-          }
-        });
+        BurpExtender.OptionPanel optionPanel1 = placeOption(SCOPE_ONLY);
+        JPanel option1 = optionPanel1.getPanel();
+        scopeOnly = optionPanel1.getCheckBox();
+        scopeOnly.setSelected(settings.getScopeOnly());
+        option1.setBounds(58, 43, 130, 20);
+        panel.add(option1);
+
+        BurpExtender.OptionPanel optionPanel2 = placeOption(AGGRESSIVE_MODE);
+        JPanel option2 = optionPanel2.getPanel();
+        aggressiveMode = optionPanel2.getCheckBox();
+        aggressiveMode.setSelected(settings.getAggressiveMode());
+        option2.setBounds(58, 63, 135, 20);
+        panel.add(option2);
+
+        BurpExtender.OptionPanel optionPanel3 = placeOption(CHECK_CONTEXT);
+        JPanel option3 = optionPanel3.getPanel();
+        checkContext = optionPanel3.getCheckBox();
+        checkContext.setSelected(settings.getCheckContext());
+        option3.setBounds(58, 83, 130, 20);
+        panel.add(option3);
+
+        initListener();
+
+        callbacks.customizeUiComponent(panel);
+        callbacks.addSuiteTab(BurpExtender.this);
+      }
+    });
   }
 
   // listener  initializations
@@ -127,70 +131,72 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
 
     // add button
     addButton.addActionListener(
-        new ActionListener() {
+    new ActionListener() {
 
-          @Override
-          public void actionPerformed(ActionEvent e) {
-            String type = contetTtypeTextField.getText();
-            Object[] rowData = {Boolean.TRUE, type};
-            ((BurpTableModel) model).addRow(rowData);
-          }
-        });
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        String type = contetTtypeTextField.getText();
+        Object[] rowData = {Boolean.TRUE, type};
+        ((BurpTableModel) model).addRow(rowData);
+      }
+    });
 
     // delete button
     deleteButton.addActionListener(
-        new ActionListener() {
+    new ActionListener() {
 
-          @Override
-          public void actionPerformed(ActionEvent e) {
-            int i = table.getSelectedRow();
-            if (i >= 0) {
-              ((BurpTableModel) model).removeRow(i);
-            }
-          }
-        });
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        int i = table.getSelectedRow();
+
+        if (i >= 0) {
+          ((BurpTableModel) model).removeRow(i);
+        }
+      }
+    });
 
     // table checkboxes
     table.addMouseListener(
-        new MouseAdapter() {
-          @Override
-          public void mouseClicked(MouseEvent e) {
-            int column = table.getSelectedColumn();
-            int row = table.getSelectedRow();
-            if (column == 0 && row >= 0) {
-              Boolean value = (Boolean) model.getValueAt(row, column);
-              value = !value;
-              model.setValueAt(value, row, column);
-            }
-          }
-        });
+    new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        int column = table.getSelectedColumn();
+        int row = table.getSelectedRow();
+
+        if (column == 0 && row >= 0) {
+          Boolean value = (Boolean) model.getValueAt(row, column);
+          value = !value;
+          model.setValueAt(value, row, column);
+        }
+      }
+    });
 
     // checkbox option
     scopeOnly.addActionListener(
-        new ActionListener() {
-          @Override
-          public void actionPerformed(ActionEvent event) {
-            settings.setScopeOnly(scopeOnly.isSelected());
-          }
-        });
+    new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent event) {
+        settings.setScopeOnly(scopeOnly.isSelected());
+      }
+    });
 
     // checkbox option
     aggressiveMode.addItemListener(
-        new ItemListener() {
-          @Override
-          public void itemStateChanged(ItemEvent e) {
-            settings.setAggressiveMode(aggressiveMode.isSelected());
-          }
-        });
+    new ItemListener() {
+      @Override
+      public void itemStateChanged(ItemEvent e) {
+        settings.setAggressiveMode(aggressiveMode.isSelected());
+      }
+    });
 
     // checkbox option
     checkContext.addItemListener(
-        new ItemListener() {
-          @Override
-          public void itemStateChanged(ItemEvent e) {
-            settings.setCheckContext(checkContext.isSelected());
-          }
-        });
+    new ItemListener() {
+      @Override
+      public void itemStateChanged(ItemEvent e) {
+        settings.setCheckContext(checkContext.isSelected());
+      }
+    });
   }
 
   private OptionPanel placeOption(String optionName) {
@@ -201,11 +207,13 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
     checkBox1.setText("");
     panelOption.add(checkBox1);
     panelOption.add(Box.createRigidArea(new Dimension(5, 5)));
+
     final JLabel label1 = new JLabel();
     label1.setText(optionName);
     label1.setFont(new Font(label1.getFont().getName(), Font.PLAIN, 14));
     panelOption.add(label1);
     panelOption.setAlignmentX(Component.LEFT_ALIGNMENT);
+
     return new OptionPanel(panelOption, checkBox1);
   }
 
@@ -243,9 +251,14 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
     List<int[]> matches = new ArrayList<int[]>();
 
     int start = 0;
+
     while (start < response.length) {
       start = helpers.indexOf(response, match, true, start, response.length);
-      if (start == -1) break;
+
+      if (start == -1) {
+        break;
+      }
+
       matches.add(new int[] {start, start + match.length});
       start += match.length;
     }
@@ -261,32 +274,49 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
     String reflectedIn = "";
     reflectedIn += "<li><b>";
     reflectedIn += param.get(NAME);
-    reflectedIn += "</b>: reflected " + String.valueOf(((List) param.get(MATCHES)).size()) + " times ";
+    reflectedIn +=
+      "</b>: reflected " + String.valueOf(((List) param.get(MATCHES)).size()) +
+      " times ";
+
     if (param.containsKey(VULNERABLE)) {
       reflectedIn += "<br>allowing: " + String.valueOf(param.get(VULNERABLE));
+
       if (settings.getCheckContext()
-          && !String.valueOf(param.get(VULNERABLE)).contains(CONTEXT_VULN_FLAG))
+          && !String.valueOf(param.get(VULNERABLE)).contains(CONTEXT_VULN_FLAG)) {
         return reflectedIn + "</li>";
+      }
+
       issueName = XSS_VULNERABLE;
     }
+
     return reflectedIn + "</li>";
   }
 
   @Override
   public List<IScanIssue> doPassiveScan(IHttpRequestResponse baseRequestResponse)
-      throws RuntimeException {
+  throws RuntimeException {
     if (this.settings.getScopeOnly()
-        && !callbacks.isInScope(helpers.analyzeRequest(baseRequestResponse).getUrl())) return null;
+        && !callbacks.isInScope(helpers.analyzeRequest(baseRequestResponse).getUrl())) {
+      return null;
+    }
+
     // check content type
     String contentType = "";
-    for (String header : helpers.analyzeResponse(baseRequestResponse.getResponse()).getHeaders()) {
+
+    for (String header : helpers.analyzeResponse(
+           baseRequestResponse.getResponse()).getHeaders()) {
       if (header.toLowerCase().contains("content-type: ")) {
         contentType = header.toLowerCase().split(": ", 2)[1];
         break;
       }
     }
-    if (settings.getEnabledContentTypes() == null) return null;
+
+    if (settings.getEnabledContentTypes() == null) {
+      return null;
+    }
+
     boolean isContentTypeAllowed = false;
+
     for (String allowedContentType : settings.getEnabledContentTypes()) {
       if (contentType.contains(allowedContentType)) {
         contentType = allowedContentType;
@@ -294,12 +324,16 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
         break;
       }
     }
+
     issueName = XSS_POSSIBLE;
+
     // start analyze request
     if (isContentTypeAllowed) {
       // Initialize check reflections
-      this.checkReflection = new CheckReflection(settings, helpers, baseRequestResponse, callbacks);
+      this.checkReflection = new CheckReflection(settings, helpers,
+          baseRequestResponse, callbacks);
       List<Map> reflections = this.checkReflection.checkResponse();
+
       if (!reflections.isEmpty()) {
         // report the issue
         String reflectedInBody = "";
@@ -307,6 +341,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
         String reflectedInAll = "";
         List<int[]> matches = new ArrayList<>();
         List<Pair> pairs = new ArrayList<>();
+
         for (Map param : reflections) {
 
           if (param.get(REFLECTED_IN).equals(BODY)) {
@@ -325,50 +360,71 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
             pairs.add(new Pair((int[]) pair));
           }
         }
+
         String START = ":<br><ul>";
         String END = "</ul>";
         String reflectedSummary = "";
-        if (!reflectedInHeader.equals(""))
-          reflectedSummary += DESCRIPTION_DETAILS + HEADERS + START + reflectedInHeader + END;
-        if (!reflectedInBody.equals(""))
+
+        if (!reflectedInHeader.equals("")) {
+          reflectedSummary += DESCRIPTION_DETAILS + HEADERS + START + reflectedInHeader +
+                              END;
+        }
+
+        if (!reflectedInBody.equals("")) {
           reflectedSummary += DESCRIPTION_DETAILS + BODY + START + reflectedInBody + END;
-        if (!reflectedInAll.equals(""))
+        }
+
+        if (!reflectedInAll.equals("")) {
           reflectedSummary += DESCRIPTION_DETAILS + BOTH + START + reflectedInAll + END;
+        }
+
         Collections.sort(
-            pairs,
-            new Comparator<Pair>() {
-              @Override
-              public int compare(Pair o1, Pair o2) {
-                if (o1.getStart() == o2.getStart()) return 0;
-                return o1.getStart() < o2.getStart() ? -1 : 1;
-              }
-            });
+          pairs,
+        new Comparator<Pair>() {
+          @Override
+          public int compare(Pair o1, Pair o2) {
+            if (o1.getStart() == o2.getStart()) {
+              return 0;
+            }
+
+            return o1.getStart() < o2.getStart() ? -1 : 1;
+          }
+        });
         int[] tmpPair = null;
+
         for (Pair pair : pairs) {
-          if (tmpPair == null) tmpPair = pair.getPair();
-          else if (tmpPair[1] > pair.getPair()[0]) tmpPair[1] = pair.getPair()[1];
-          else {
+          if (tmpPair == null) {
+            tmpPair = pair.getPair();
+          } else if (tmpPair[1] > pair.getPair()[0]) {
+            tmpPair[1] = pair.getPair()[1];
+          } else {
             matches.add(tmpPair);
             tmpPair = pair.getPair();
           }
         }
+
         if (tmpPair != null) {
           matches.add(tmpPair);
         }
+
         List<IScanIssue> issues = new ArrayList<>();
         issues.add(
-            new CustomScanIssue(
-                baseRequestResponse.getHttpService(),
-                helpers.analyzeRequest(baseRequestResponse).getUrl(),
-                new IHttpRequestResponse[] {
-                  callbacks.applyMarkers(baseRequestResponse, null, matches)
-                },
-                issueName,
-                reflectedSummary,
-                getSeverity(issueName)));
+          new CustomScanIssue(
+            baseRequestResponse.getHttpService(),
+            helpers.analyzeRequest(baseRequestResponse).getUrl(),
+            new IHttpRequestResponse[] {
+              callbacks.applyMarkers(baseRequestResponse, null, matches)
+            },
+            issueName,
+            reflectedSummary,
+            getSeverity(issueName)));
         return issues;
-      } else return null;
-    } else return null;
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
   }
 
   private String getSeverity(String issueName) {
@@ -377,12 +433,14 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
 
   @Override
   public List<IScanIssue> doActiveScan(
-      IHttpRequestResponse baseRequestResponse, IScannerInsertionPoint insertionPoint) {
+    IHttpRequestResponse baseRequestResponse,
+    IScannerInsertionPoint insertionPoint) {
     return null;
   }
 
   @Override
-  public int consolidateDuplicateIssues(IScanIssue existingIssue, IScanIssue newIssue) {
+  public int consolidateDuplicateIssues(IScanIssue existingIssue,
+                                        IScanIssue newIssue) {
     if (existingIssue.getIssueDetail().equals(newIssue.getIssueDetail())) {
       return -1;
     } else {
@@ -403,12 +461,12 @@ class CustomScanIssue implements IScanIssue {
   private String severity;
 
   public CustomScanIssue(
-      IHttpService httpService,
-      URL url,
-      IHttpRequestResponse[] httpMessages,
-      String name,
-      String detail,
-      String severity) {
+    IHttpService httpService,
+    URL url,
+    IHttpRequestResponse[] httpMessages,
+    String name,
+    String detail,
+    String severity) {
     this.httpService = httpService;
     this.url = url;
     this.httpMessages = httpMessages;

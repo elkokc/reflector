@@ -31,6 +31,6 @@ public interface IMenuItemHandler
      * menu was displayed.
      */
     void menuItemClicked(
-            String menuItemCaption,
-            IHttpRequestResponse[] messageInfo);
+        String menuItemCaption,
+        IHttpRequestResponse[] messageInfo);
 }
