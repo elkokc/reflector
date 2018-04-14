@@ -168,7 +168,7 @@ class Aggressive {
   private String host;
   private int port;
   private static final String PAYLOAD_GREP = "p@y";
-  private static final String PAYLOAD = "<\"'";
+  private static final String PAYLOAD = "%3c%22%27";
   private static final String PAYLOAD_JSON = "<\\\"'";
   private Pattern pattern;
   private Settings settings;
