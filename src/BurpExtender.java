@@ -4,7 +4,6 @@ import static burp.MapConstants.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.List;
@@ -275,7 +274,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
 
   @Override
   public List<IScanIssue> doPassiveScan(IHttpRequestResponse baseRequestResponse)
-      throws MalformedURLException {
+      throws RuntimeException {
     if (this.settings.getScopeOnly()
         && !callbacks.isInScope(helpers.analyzeRequest(baseRequestResponse).getUrl())) return null;
     // check content type

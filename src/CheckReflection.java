@@ -269,7 +269,7 @@ class Aggressive {
 
   private String prepareRequest(Map parameter) {
     String payload = PAYLOAD;
-    if (parameter.get(TYPE) == IParameter.PARAM_JSON) {
+    if (parameter.get(TYPE).equals(IParameter.PARAM_JSON)) {
       payload = PAYLOAD_JSON;
     }
 
