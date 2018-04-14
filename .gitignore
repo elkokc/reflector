@@ -1,3 +1,4 @@
 build/
+src/burp/
 *.jar
 *.swp
