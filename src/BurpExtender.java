@@ -13,9 +13,11 @@ import javax.swing.table.TableModel;
 
 public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
   public static final String PLUGIN_NAME = "Reflector";
+  public static final String PLUGIN_VERSION = "1.1";
   private IBurpExtenderCallbacks callbacks;
   private IExtensionHelpers helpers;
   private static final String DESCRIPTION_DETAILS = "Reflected parameters in ";
+  private static final String XSS_NONE = "XSS (reflected value)";
   private static final String XSS_POSSIBLE = "XSS (possible)";
   private static final String XSS_VULNERABLE = "XSS (vulnerable)";
   public static final String ALLOWED_CONTENT_TYPE = "Allowed Content-Type";
@@ -37,7 +39,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
   private Settings settings;
   private CheckReflection checkReflection;
 
-  String issueName = XSS_POSSIBLE;
+  String issueName = XSS_NONE;
 
   @Override
   public void registerExtenderCallbacks(final IBurpExtenderCallbacks callbacks) {
@@ -47,7 +49,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
     helpers = callbacks.getHelpers();
 
     // set our extension name
-    callbacks.setExtensionName(PLUGIN_NAME);
+    callbacks.setExtensionName(PLUGIN_NAME + " v" + PLUGIN_VERSION);
 
     // register ourselves as a custom scanner check
     callbacks.registerScannerCheck(this);
@@ -279,6 +281,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
       " times ";
 
     if (param.containsKey(VULNERABLE)) {
+      issueName = XSS_POSSIBLE;
       reflectedIn += "<br>allowing: " + String.valueOf(param.get(VULNERABLE));
 
       if (settings.getCheckContext()
@@ -325,7 +328,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
       }
     }
 
-    issueName = XSS_POSSIBLE;
+    //issueName = XSS_POSSIBLE;
 
     // start analyze request
     if (isContentTypeAllowed) {
@@ -417,7 +420,8 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
             },
             issueName,
             reflectedSummary,
-            getSeverity(issueName)));
+            getSeverity(issueName),
+            getConfidence(issueName)));
         return issues;
       } else {
         return null;
@@ -428,7 +432,35 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
   }
 
   private String getSeverity(String issueName) {
-    return XSS_VULNERABLE.equals(issueName) ? "High" : "Medium";
+    String ret = "";
+    switch (issueName) {
+      case XSS_NONE: 
+        ret = "Low"; 
+        break;
+      case XSS_POSSIBLE: 
+        ret = "Medium"; 
+        break;
+      case XSS_VULNERABLE: 
+        ret = "High";  
+        break;
+    }
+    return ret;
+  }
+
+  private String getConfidence(String issueName) {
+    String ret = "";
+    switch (issueName) {
+      case XSS_NONE: 
+        ret = "Firm"; 
+        break;
+      case XSS_POSSIBLE: 
+        ret = "Tentative"; 
+        break;
+      case XSS_VULNERABLE: 
+        ret = "Certain"; 
+        break;
+    }
+    return ret;
   }
 
   @Override
@@ -459,6 +491,7 @@ class CustomScanIssue implements IScanIssue {
   private String name;
   private String detail;
   private String severity;
+  private String confidence;
 
   public CustomScanIssue(
     IHttpService httpService,
@@ -466,13 +499,15 @@ class CustomScanIssue implements IScanIssue {
     IHttpRequestResponse[] httpMessages,
     String name,
     String detail,
-    String severity) {
+    String severity,
+    String confidence) {
     this.httpService = httpService;
     this.url = url;
     this.httpMessages = httpMessages;
     this.name = name;
     this.detail = detail;
     this.severity = severity;
+    this.confidence = confidence;
   }
 
   @Override
@@ -497,7 +532,7 @@ class CustomScanIssue implements IScanIssue {
 
   @Override
   public String getConfidence() {
-    return "Certain";
+    return confidence;
   }
 
   @Override

@@ -226,7 +226,7 @@ class Aggressive {
       }
 
       testRequest = prepareRequest(param);
-      symbols = checkRespone(testRequest);
+      symbols = checkResponse(testRequest);
 
       if (!symbols.equals("")) {
         param.put(VULNERABLE, symbols);
@@ -243,7 +243,7 @@ class Aggressive {
            .replaceAll("[\\\\]", "");
   }
 
-  private String checkRespone(String testRequest) {
+  private String checkResponse(String testRequest) {
     String reflectedPayloadValue = "", symbols = "";
     int bodyOffset;
 
