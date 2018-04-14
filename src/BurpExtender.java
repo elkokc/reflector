@@ -273,6 +273,8 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
   //
 
   private String buildIssueForReflection(Map param) {
+    issueName = XSS_NONE;
+
     String reflectedIn = "";
     reflectedIn += "<li><b>";
     reflectedIn += param.get(NAME);
@@ -328,7 +330,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
       }
     }
 
-    //issueName = XSS_POSSIBLE;
+    //issueName = XSS_NONE;
 
     // start analyze request
     if (isContentTypeAllowed) {
