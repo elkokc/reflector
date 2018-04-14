@@ -52,9 +52,8 @@ Compiled by jdk 1.7
 
 Example:
 
-* javac.exe -d build src/burp/*.java
-
-* jar.exe cf plugin.jar -C build burp
+* javac -d build src/burp/*.java src/*.java
+* jar cf plugin.jar -C build burp
 
 # Authors
 * Shvetsov Alexandr (GitHub: ![shvetsovalex](https://github.com/shvetsovalex))
