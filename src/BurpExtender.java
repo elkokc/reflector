@@ -16,9 +16,9 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
   private IBurpExtenderCallbacks callbacks;
   private IExtensionHelpers helpers;
   private static final String DESCRIPTION_DETAILS = "Reflected parameters in ";
-  private static final String XSS_POSIBLE = "XSS (possible)";
+  private static final String XSS_POSSIBLE = "XSS (possible)";
   private static final String XSS_VULNERABLE = "XSS (vulnerable)";
-  String issueName = XSS_POSIBLE;
+  String issueName = XSS_POSSIBLE;
   public static final String ALLOWED_CONTENT_TYPE = "Allowed Content-Type";
   public static final String DELETE = "Delete";
   public static final String ADD = "Add";
@@ -263,7 +263,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
     reflectedIn += param.get(NAME);
     reflectedIn += " - reflected " + String.valueOf(((List) param.get(MATCHES)).size()) + " times ";
     if (param.containsKey(VULNERABLE)) {
-      reflectedIn += "and allow the next characters: " + String.valueOf(param.get(VULNERABLE));
+      reflectedIn += "allowing: " + String.valueOf(param.get(VULNERABLE));
       if (settings.getCheckContext()
           && !String.valueOf(param.get(VULNERABLE)).contains(CONTEXT_VULN_FLAG))
         return reflectedIn + "</li>";
@@ -294,7 +294,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
         break;
       }
     }
-    issueName = XSS_POSIBLE;
+    issueName = XSS_POSSIBLE;
     // start analyze request
     if (isContentTypeAllowed) {
       // Initialize check reflections

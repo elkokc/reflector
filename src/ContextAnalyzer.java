@@ -97,7 +97,7 @@ class ContextAnalyzer {
           symbols += String.valueOf(context);
           reflectedPayloadValue = reflectedPayloadValue.replace(contextChars, "");
           if (reflectedPayloadValue.length() > 0) {
-            symbols += ", other chars: ";
+            symbols += "<br>other chars: ";
           }
         }
         if (reflectedPayloadValue.length() > 0) {
