@@ -97,7 +97,7 @@ class ContextAnalyzer {
           symbols += String.valueOf(context);
           reflectedPayloadValue = reflectedPayloadValue.replace(contextChars, "");
           if (reflectedPayloadValue.length() > 0) {
-            symbols += "<br>other chars: ";
+            symbols += "\nother chars: ";
           }
         }
         if (reflectedPayloadValue.length() > 0) {
@@ -116,7 +116,8 @@ class ContextAnalyzer {
               .replaceAll("<", "&lt;")
               .replaceAll("'", "&#39;")
               .replaceAll("\"", "&quot;")
-              .replaceAll("\\|\\|", "<b>|</b>");
+              .replaceAll("\\|\\|", "<b>|</b>")
+              .replaceAll("\\n", "<br>");
       if (vulnerableFlag) {
         symbols += CONTEXT_VULN_FLAG;
       }

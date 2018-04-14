@@ -259,11 +259,11 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab {
 
   private String buildIssueForReflection(Map param) {
     String reflectedIn = "";
-    reflectedIn += "<li>";
+    reflectedIn += "<li><b>";
     reflectedIn += param.get(NAME);
-    reflectedIn += " - reflected " + String.valueOf(((List) param.get(MATCHES)).size()) + " times ";
+    reflectedIn += "</b>: reflected " + String.valueOf(((List) param.get(MATCHES)).size()) + " times ";
     if (param.containsKey(VULNERABLE)) {
-      reflectedIn += "allowing: " + String.valueOf(param.get(VULNERABLE));
+      reflectedIn += "<br>allowing: " + String.valueOf(param.get(VULNERABLE));
       if (settings.getCheckContext()
           && !String.valueOf(param.get(VULNERABLE)).contains(CONTEXT_VULN_FLAG))
         return reflectedIn + "</li>";
