@@ -1,0 +1,8 @@
+# Intellij IDEA files
+
+*.iml
+*.swp
+.idea/
+
+build/
+plugin.jar
