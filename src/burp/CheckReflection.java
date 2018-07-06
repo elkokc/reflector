@@ -191,8 +191,14 @@ class Aggressive
                 symbols = "";
         int bodyOffset;
         try {
-            String response = new Client(callbacks).run(testRequest, host, this.port);
-            bodyOffset = response.indexOf("\n\n") + 2;
+
+            IHttpRequestResponse responseObject = this.callbacks.makeHttpRequest(
+                    this.baseRequestResponse.getHttpService(),
+                    testRequest.getBytes()
+            );
+            String response = helpers.bytesToString( responseObject.getResponse() );
+
+            bodyOffset = helpers.analyzeResponse( responseObject.getResponse() ).getBodyOffset();
 
             Matcher matcher = this.pattern.matcher(response);
             ArrayList<int[]> payloadIndexes = new ArrayList<>();
@@ -201,7 +207,7 @@ class Aggressive
             }
             matcher = null;
 
-            if ( settings.getCheckContext() && bodyOffset != 1) {
+            if ( settings.getCheckContext() && bodyOffset != response.length()) {
                 ContextAnalyzer contextAnalyzer = new ContextAnalyzer(response.substring(bodyOffset).toLowerCase(), payloadIndexes);
                 symbols = contextAnalyzer.getIssuesForAllParameters();
             } else if(bodyOffset != 1) {
@@ -219,17 +225,9 @@ class Aggressive
                     symbols = symbols.substring(0, symbols.length() - 4).replaceAll("<", "&lt;").replaceAll("'", "&#39;").replaceAll("\"", "&quot;").replaceAll("\\|\\|", "<b>|</b>");
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             callbacks.printError(e.getMessage());
             return "";
-        } catch (KeyManagementException e) {
-            callbacks.printError(e.getMessage());
-        } catch (CertificateException e) {
-            callbacks.printError(e.getMessage());
-        } catch (NoSuchAlgorithmException e) {
-            callbacks.printError(e.getMessage());
-        } catch (KeyStoreException e) {
-            callbacks.printError(e.getMessage());
         }
         return symbols;
     }
