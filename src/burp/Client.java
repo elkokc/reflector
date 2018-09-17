@@ -9,6 +9,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.zip.GZIPInputStream;
+import javax.xml.bind.DatatypeConverter;
 
 public class Client {
 
