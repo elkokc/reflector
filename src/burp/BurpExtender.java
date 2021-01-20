@@ -273,7 +273,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
         reflectedIn+=" - reflected "+ String.valueOf(((List)param.get(MATCHES)).size())+" times ";
         if (param.containsKey(VULNERABLE))
         {
-            reflectedIn += "and allow the next characters: "+ String.valueOf(param.get(VULNERABLE));
+            reflectedIn += "and allow the following characters: "+ String.valueOf(param.get(VULNERABLE));
             if (settings.getCheckContext() && !String.valueOf(param.get(VULNERABLE)).contains(CONTEXT_VULN_FLAG))
                 return reflectedIn+ "</li>" ;
             issueName = XSS_VULNERABLE;
