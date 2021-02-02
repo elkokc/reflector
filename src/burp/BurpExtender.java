@@ -266,20 +266,22 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
     // implement IScannerCheck
     //
 
-    private String buildIssueForReflection( Map param)
+    private String buildIssueForReflection(Map param, boolean exploitable)
     {
         String reflectedIn = "";
-        reflectedIn+="<li>";
-        reflectedIn+=param.get(NAME);
-        reflectedIn+=" - reflected "+ String.valueOf(((List)param.get(MATCHES)).size())+" times ";
+        reflectedIn += "<li>";
+        reflectedIn += param.get(NAME);
+        reflectedIn += " - reflected "+ String.valueOf(((List)param.get(MATCHES)).size())+" times ";
         if (param.containsKey(VULNERABLE))
         {
             List reflectedChars = String.valueOf(param.get(VULNERABLE));
             reflectedIn += "and allow the following characters: "+ reflectedChars;
             if (settings.getCheckContext() && !reflectedChars.contains(CONTEXT_VULN_FLAG))
                 return reflectedIn+ "</li>" ;
-            if (reflectedChars.contains("\"") && reflectedChars.contains("<") && reflectedChars.contains(">"))
+            if (!exploitable)
             {
+                 issueName = XSS_UNLIKELY;
+            } else if (reflectedChars.contains("\"") && reflectedChars.contains("<")) {
                 issueName = XSS_VULNERABLE;
             } else {
                 issueName = XSS_POSSIBLE;
@@ -328,16 +330,16 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
                 for(Map param: reflections) {
 
                     if(param.get(REFLECTED_IN).equals(BODY)){
-                        reflectedInBody+=buildIssueForReflection(param);
+                        reflectedInBody+=buildIssueForReflection(param, true);
                     }
 
                     if(param.get(REFLECTED_IN).equals(HEADERS)){
-                        reflectedInHeader+=buildIssueForReflection(param);
+                        reflectedInHeader+=buildIssueForReflection(param, false);
                     }
 
 
                     if(param.get(REFLECTED_IN).equals(BOTH)){
-                        reflectedInAll+=buildIssueForReflection(param);
+                        reflectedInAll+=buildIssueForReflection(param, true);
                     }
 
 
@@ -349,11 +351,11 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
                 String END = "</ul>";
                 String reflectedSummary = "";
                 if(!reflectedInHeader.equals(""))
-                    reflectedSummary+=DESCRIPTION_DETAILS + HEADERS+START+reflectedInHeader+END;
+                    reflectedSummary+=DESCRIPTION_DETAILS + HEADERS + START + reflectedInHeader+END;
                 if(!reflectedInBody.equals(""))
                     reflectedSummary+=DESCRIPTION_DETAILS + BODY + START + reflectedInBody+END;
                 if(!reflectedInAll.equals(""))
-                    reflectedSummary+=DESCRIPTION_DETAILS+BOTH+START+reflectedInAll+END;
+                    reflectedSummary+=DESCRIPTION_DETAILS + BOTH + START + reflectedInAll+END;
                 Collections.sort(pairs, new Comparator<Pair>() {
                     @Override
                     public int compare(Pair o1, Pair o2) {
