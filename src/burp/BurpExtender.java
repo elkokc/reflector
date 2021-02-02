@@ -17,6 +17,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
     private IBurpExtenderCallbacks callbacks;
     private IExtensionHelpers helpers;
     private static final String DESCRIPTION_DETAILS = "Reflected parameters in ";
+    private static final String XSS_UNLIKELY= "XSS (unlikely)";
     private static final String XSS_POSSIBLE = "XSS (possible)";
     private static final String XSS_VULNERABLE= "XSS (vulnerable)";
     public static final String ALLOWED_CONTENT_TYPE = "Allowed Content-Type";
@@ -36,7 +37,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
     private JCheckBox aggressiveMode;
     private JCheckBox checkContext;
     private Settings settings;
-    private String issueName = XSS_POSSIBLE;
+    private String issueName = XSS_UNLIKELY;
 
     private CheckReflection checkReflection;
 
@@ -273,10 +274,16 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
         reflectedIn+=" - reflected "+ String.valueOf(((List)param.get(MATCHES)).size())+" times ";
         if (param.containsKey(VULNERABLE))
         {
-            reflectedIn += "and allow the following characters: "+ String.valueOf(param.get(VULNERABLE));
-            if (settings.getCheckContext() && !String.valueOf(param.get(VULNERABLE)).contains(CONTEXT_VULN_FLAG))
+            List reflectedChars = String.valueOf(param.get(VULNERABLE));
+            reflectedIn += "and allow the following characters: "+ reflectedChars;
+            if (settings.getCheckContext() && !reflectedChars.contains(CONTEXT_VULN_FLAG))
                 return reflectedIn+ "</li>" ;
-            issueName = XSS_VULNERABLE;
+            if (reflectedChars.contains("\"") && reflectedChars.contains("<") && reflectedChars.contains(">"))
+            {
+                issueName = XSS_VULNERABLE;
+            } else {
+                issueName = XSS_POSSIBLE;
+            }
         }
         return reflectedIn+ "</li>" ;
     }
@@ -303,7 +310,7 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
                 break;
             }
         }
-        issueName = XSS_POSSIBLE;
+        issueName = XSS_UNLIKELY;
         // start analyze request
         if ( isContentTypeAllowed )
         {
@@ -385,7 +392,14 @@ public class BurpExtender implements IBurpExtender, IScannerCheck, ITab
     }
 
     private String getSeverity(String issueName) {
-        return XSS_VULNERABLE.equals(issueName) ? "High" : "Medium";
+        if XSS_UNLIKELY.equals(issueName)
+        { 
+            return "Low";
+        } else if XSS_POSSIBLE.equals(issueName) {
+            return "Medium";
+        } else {
+            return "High";
+        }
     }
 
     @Override
